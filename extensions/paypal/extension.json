@@ -1,0 +1,24 @@
+{
+  "id": "paypal-connector",
+  "name": "paypal-connector",
+  "displayName": "PayPal Connector",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "MIT",
+  "description": "PayPal payments",
+  "category": "integration",
+  "type": "connector",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [
+    "integration-hub:read",
+    "integration-hub:write",
+    "network:outbound",
+    "network:inbound",
+    "events:publish"
+  ],
+  "connectors": [
+    "paypal"
+  ],
+  "main": "dist/index.js"
+}

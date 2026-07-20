@@ -1,0 +1,71 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: grafana
+spec:
+  ports:
+    - port: {{ .Values.grafana.servicePort }}
+      targetPort: 3000
+  selector:
+    lateen.io/component: grafana
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      lateen.io/component: grafana
+  template:
+    metadata:
+      labels:
+        lateen.io/component: grafana
+        {{- include "lateen.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        fsGroup: 472
+      containers:
+        - name: grafana
+          image: {{ .Values.grafana.image }}
+          env:
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lateen.fullname" . }}-secrets
+                  key: LATEEN_GRAFANA_ADMIN_PASSWORD
+            - name: GF_SERVER_ROOT_URL
+              value: "%(protocol)s://%(domain)s/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+          ports:
+            - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+{{- end }}

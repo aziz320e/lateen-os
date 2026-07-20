@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+!infrastructure/environments/.env.example
+!infrastructure/environments/.env.development
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Test & coverage
+coverage/
+.nyc_output/
+
+# Docker
+docker/data/
+infrastructure/backups/*
+!infrastructure/backups/.gitkeep
+
+# Misc
+*.local
+.cache/

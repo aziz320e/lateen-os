@@ -1,0 +1,7 @@
+{
+  "id": "analytics-center",
+  "name": "Analytics Center",
+  "version": "0.0.0",
+  "type": "application",
+  "description": "Enterprise BI UI for Lateen OS"
+}

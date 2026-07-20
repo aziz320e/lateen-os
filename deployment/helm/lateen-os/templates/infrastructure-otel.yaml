@@ -1,0 +1,113 @@
+{{- if .Values.otelCollector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      batch:
+        timeout: 5s
+      resource:
+        attributes:
+          - key: lateen.environment
+            value: {{ .Values.global.environment }}
+            action: upsert
+    exporters:
+      prometheus:
+        endpoint: 0.0.0.0:8889
+      logging:
+        loglevel: info
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch, resource]
+          exporters: [logging]
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: otel-collector
+spec:
+  ports:
+    - port: 4317
+      targetPort: 4317
+      name: otlp-grpc
+    - port: 4318
+      targetPort: 4318
+      name: otlp-http
+    - port: 8889
+      targetPort: 8889
+      name: metrics
+  selector:
+    lateen.io/component: otel-collector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      lateen.io/component: otel-collector
+  template:
+    metadata:
+      labels:
+        lateen.io/component: otel-collector
+        {{- include "lateen.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: otel-collector
+          image: {{ .Values.otelCollector.image }}
+          args: ["--config=/etc/otel/config.yaml"]
+          ports:
+            - containerPort: 4317
+            - containerPort: 4318
+            - containerPort: 8889
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel
+          livenessProbe:
+            tcpSocket:
+              port: 4318
+            initialDelaySeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+{{- end }}

@@ -1,0 +1,12 @@
+# Placeholder for frontend and client applications.
+
+Add new apps under this directory and register them in `pnpm-workspace.yaml`.
+
+Each app should define standard Turborepo scripts:
+
+- `build`
+- `dev`
+- `lint`
+- `test`
+- `typecheck`
+- `clean`

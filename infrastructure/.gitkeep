@@ -1,0 +1,5 @@
+# Lateen OS — Platform Infrastructure
+
+Local Docker Compose stack for runnable Lateen OS development.
+
+See [README.md](./README.md) and [docs/infrastructure/](../docs/infrastructure/README.md).

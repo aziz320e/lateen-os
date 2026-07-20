@@ -1,0 +1,15 @@
+{
+  "id": "setup-wizard",
+  "name": "setup-wizard",
+  "displayName": "Setup Wizard",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "UNLICENSED",
+  "description": "Enterprise provisioning setup wizard",
+  "category": "platform",
+  "type": "application",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [],
+  "dependencies": []
+}

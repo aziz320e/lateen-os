@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: lateen-os-sa
+  namespace: lateen-os
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: lateen-os-role
+  namespace: lateen-os
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: lateen-os-rolebinding
+  namespace: lateen-os
+subjects:
+  - kind: ServiceAccount
+    name: lateen-os-sa
+    namespace: lateen-os
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lateen-os-role

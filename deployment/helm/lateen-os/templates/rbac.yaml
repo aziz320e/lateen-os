@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "lateen.fullname" . }}-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "lateen.fullname" . }}-rolebinding
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "lateen.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "lateen.fullname" . }}-role

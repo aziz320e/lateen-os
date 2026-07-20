@@ -1,0 +1,18 @@
+# Patterns to ignore when building images.
+.git
+.github
+**/.next
+**/node_modules
+**/dist
+**/.turbo
+**/coverage
+**/*.md
+!README.md
+deployment/kubernetes
+deployment/terraform
+deployment/docs
+deployment/monitoring
+deployment/security
+infrastructure
+docs
+*.log

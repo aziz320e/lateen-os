@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/marketplace-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ReleaseChannel {
+  STABLE
+  BETA
+  ALPHA
+  NIGHTLY
+}
+
+enum DistributionVisibility {
+  PUBLIC
+  PRIVATE
+  ENTERPRISE
+}
+
+enum LicenseType {
+  FREE
+  COMMERCIAL
+  TRIAL
+  ENTERPRISE
+  SUBSCRIPTION
+  SEAT_BASED
+}
+
+enum ExtensionVisibility {
+  PUBLISHED
+  UNPUBLISHED
+  ARCHIVED
+}
+
+enum PublisherVerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+}
+
+model PublisherRecord {
+  id               String                      @id @default(uuid())
+  slug             String                      @unique
+  displayName      String
+  description      String?
+  website          String?
+  verification     PublisherVerificationStatus @default(UNVERIFIED)
+  organizationId   String?
+  publicProfile    Json                        @default("{}")
+  developerProfile Json                        @default("{}")
+  apiKeyHash       String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  extensions       ExtensionRecord[]
+}
+
+model ExtensionRecord {
+  id              String              @id @default(uuid())
+  extensionId     String              @unique
+  publisherId     String
+  publisher       PublisherRecord     @relation(fields: [publisherId], references: [id])
+  manifest        Json
+  category        String
+  extensionType   String
+  visibility      ExtensionVisibility @default(PUBLISHED)
+  distribution    DistributionVisibility @default(PUBLIC)
+  tags            String[]            @default([])
+  industry        String?
+  capability      String?
+  documentation   String?
+  screenshots     String[]            @default([])
+  videos          String[]            @default([])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  releases        ReleaseRecord[]
+  reviews         ReviewRecord[]
+  installations   InstallationRecord[]
+  downloads       DownloadRecord[]
+}
+
+model ReleaseRecord {
+  id              String         @id @default(uuid())
+  extensionId     String
+  extension       ExtensionRecord @relation(fields: [extensionId], references: [id])
+  version         String
+  channel         ReleaseChannel @default(STABLE)
+  manifest        Json
+  packageUrl      String?
+  checksum        String?
+  releaseNotes    String?
+  permissions     String[]       @default([])
+  dependencies    Json           @default("[]")
+  compatibility   Json           @default("{}")
+  publishedAt     DateTime       @default(now())
+  archivedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  licenses        LicenseRecord[]
+  reviews         ReviewRecord[]
+  downloads       DownloadRecord[]
+
+  @@unique([extensionId, version, channel])
+}
+
+model LicenseRecord {
+  id          String      @id @default(uuid())
+  releaseId   String
+  release     ReleaseRecord @relation(fields: [releaseId], references: [id])
+  type        LicenseType @default(FREE)
+  priceCents  Int         @default(0)
+  currency    String      @default("USD")
+  trialDays   Int?
+  seatLimit   Int?
+  metadata    Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  purchases   PurchaseRecord[]
+  subscriptions SubscriptionRecord[]
+}
+
+model PurchaseRecord {
+  id             String        @id @default(uuid())
+  licenseId      String
+  license        LicenseRecord @relation(fields: [licenseId], references: [id])
+  organizationId String
+  purchaserId    String?
+  seats          Int           @default(1)
+  purchasedAt    DateTime      @default(now())
+}
+
+model SubscriptionRecord {
+  id             String        @id @default(uuid())
+  licenseId      String
+  license        LicenseRecord @relation(fields: [licenseId], references: [id])
+  organizationId String
+  status         String        @default("active")
+  seats          Int           @default(1)
+  startedAt      DateTime      @default(now())
+  expiresAt      DateTime?
+}
+
+model ReviewRecord {
+  id              String          @id @default(uuid())
+  extensionId     String
+  extension       ExtensionRecord @relation(fields: [extensionId], references: [id])
+  releaseId       String?
+  release         ReleaseRecord?  @relation(fields: [releaseId], references: [id])
+  organizationId  String
+  authorId        String
+  rating          Int
+  comment         String?
+  verifiedInstall Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model DownloadRecord {
+  id             String          @id @default(uuid())
+  extensionId    String
+  extension      ExtensionRecord @relation(fields: [extensionId], references: [id])
+  releaseId      String
+  release        ReleaseRecord   @relation(fields: [releaseId], references: [id])
+  organizationId String?
+  downloadedAt   DateTime        @default(now())
+}
+
+model InstallationRecord {
+  id             String          @id @default(uuid())
+  extensionId    String
+  extension      ExtensionRecord @relation(fields: [extensionId], references: [id])
+  organizationId String
+  version        String
+  channel        ReleaseChannel  @default(STABLE)
+  status         String          @default("installed")
+  installedAt    DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([extensionId, organizationId])
+}

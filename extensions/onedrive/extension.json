@@ -1,0 +1,24 @@
+{
+  "id": "onedrive-connector",
+  "name": "onedrive-connector",
+  "displayName": "OneDrive Connector",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "MIT",
+  "description": "Microsoft cloud storage",
+  "category": "integration",
+  "type": "connector",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [
+    "integration-hub:read",
+    "integration-hub:write",
+    "network:outbound",
+    "network:inbound",
+    "events:publish"
+  ],
+  "connectors": [
+    "onedrive"
+  ],
+  "main": "dist/index.js"
+}

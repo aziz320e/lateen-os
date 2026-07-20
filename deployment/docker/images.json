@@ -1,0 +1,169 @@
+{
+  "registry": "ghcr.io/lateen-os",
+  "backends": [
+    {
+      "name": "business-dna-service",
+      "package": "@lateen-os/business-dna-service",
+      "path": "services/business-dna-service",
+      "port": 4001,
+      "healthPath": "/health"
+    },
+    {
+      "name": "product-discovery",
+      "package": "@lateen-os/product-discovery",
+      "path": "services/product-discovery",
+      "port": 4002,
+      "healthPath": "/health"
+    },
+    {
+      "name": "identity-service",
+      "package": "@lateen-os/identity-service",
+      "path": "services/identity-service",
+      "port": 4003,
+      "healthPath": "/health"
+    },
+    {
+      "name": "integration-hub",
+      "package": "@lateen-os/integration-hub",
+      "path": "services/integration-hub",
+      "port": 4004,
+      "healthPath": "/health"
+    },
+    {
+      "name": "mission-scheduler",
+      "package": "@lateen-os/mission-scheduler",
+      "path": "services/mission-scheduler",
+      "port": 4005,
+      "healthPath": "/health"
+    },
+    {
+      "name": "marketplace",
+      "package": "@lateen-os/marketplace-service",
+      "path": "services/marketplace",
+      "port": 4006,
+      "healthPath": "/health"
+    },
+    {
+      "name": "provisioning",
+      "package": "@lateen-os/provisioning-service",
+      "path": "services/provisioning",
+      "port": 4007,
+      "healthPath": "/health"
+    },
+    {
+      "name": "api-gateway",
+      "package": "@lateen-os/api-gateway-service",
+      "path": "services/api-gateway",
+      "port": 4008,
+      "healthPath": "/health"
+    },
+    {
+      "name": "knowledge-platform",
+      "package": "@lateen-os/knowledge-platform-service",
+      "path": "services/knowledge-platform",
+      "port": 4009,
+      "healthPath": "/health"
+    },
+    {
+      "name": "search-platform",
+      "package": "@lateen-os/search-platform-service",
+      "path": "services/search-platform",
+      "port": 4010,
+      "healthPath": "/health"
+    },
+    {
+      "name": "analytics-platform",
+      "package": "@lateen-os/analytics-platform-service",
+      "path": "services/analytics-platform",
+      "port": 4011,
+      "healthPath": "/health"
+    },
+    {
+      "name": "cloud-control-plane",
+      "package": "@lateen-os/cloud-control-plane-service",
+      "path": "services/cloud-control-plane",
+      "port": 4012,
+      "healthPath": "/health"
+    }
+  ],
+  "frontends": [
+    {
+      "name": "ai-product-manager",
+      "package": "@lateen-os/ai-product-manager",
+      "path": "apps/ai-product-manager",
+      "port": 3000
+    },
+    {
+      "name": "business-dna-studio",
+      "package": "@lateen-os/business-dna-studio",
+      "path": "apps/business-dna-studio",
+      "port": 3001
+    },
+    {
+      "name": "ceo-cockpit",
+      "package": "@lateen-os/ceo-cockpit",
+      "path": "apps/ceo-cockpit",
+      "port": 3002
+    },
+    {
+      "name": "customer-portal",
+      "package": "@lateen-os/customer-portal",
+      "path": "apps/customer-portal",
+      "port": 3003
+    },
+    {
+      "name": "lateen-assistant",
+      "package": "@lateen-os/lateen-assistant",
+      "path": "apps/lateen-assistant",
+      "port": 3004
+    },
+    {
+      "name": "marketplace",
+      "package": "@lateen-os/marketplace",
+      "path": "apps/marketplace",
+      "port": 3005
+    },
+    {
+      "name": "setup-wizard",
+      "package": "@lateen-os/setup-wizard",
+      "path": "apps/setup-wizard",
+      "port": 3006
+    },
+    {
+      "name": "admin-gateway",
+      "package": "@lateen-os/admin-gateway",
+      "path": "apps/admin-gateway",
+      "port": 3007
+    },
+    {
+      "name": "search-center",
+      "package": "@lateen-os/search-center",
+      "path": "apps/search-center",
+      "port": 3008
+    },
+    {
+      "name": "ai-studio",
+      "package": "@lateen-os/ai-studio",
+      "path": "apps/ai-studio",
+      "port": 3009
+    },
+    {
+      "name": "automation-studio",
+      "package": "@lateen-os/automation-studio",
+      "path": "apps/automation-studio",
+      "port": 3010
+    },
+    {
+      "name": "analytics-center",
+      "package": "@lateen-os/analytics-center",
+      "path": "apps/analytics-center",
+      "port": 3011
+    },
+    {
+      "name": "cloud-console",
+      "package": "@lateen-os/cloud-console",
+      "path": "apps/cloud-console",
+      "port": 3012
+    }
+  ]
+}

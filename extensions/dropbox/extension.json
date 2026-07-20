@@ -1,0 +1,24 @@
+{
+  "id": "dropbox-connector",
+  "name": "dropbox-connector",
+  "displayName": "Dropbox Connector",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "MIT",
+  "description": "Dropbox file sync",
+  "category": "integration",
+  "type": "connector",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [
+    "integration-hub:read",
+    "integration-hub:write",
+    "network:outbound",
+    "network:inbound",
+    "events:publish"
+  ],
+  "connectors": [
+    "dropbox"
+  ],
+  "main": "dist/index.js"
+}

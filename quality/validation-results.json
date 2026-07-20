@@ -1,0 +1,1067 @@
+{
+  "version": "1.0.0-rc.1",
+  "generatedAt": "2026-07-20T12:54:52.325Z",
+  "summary": {
+    "total": 132,
+    "passed": 132,
+    "failed": 0
+  },
+  "results": [
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/typescript-config",
+      "cmd": "pnpm --filter @lateen-os/typescript-config build",
+      "status": "pass",
+      "durationMs": 1365,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/typescript-config",
+      "cmd": "pnpm --filter @lateen-os/typescript-config typecheck",
+      "status": "pass",
+      "durationMs": 1378,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/typescript-config",
+      "cmd": "pnpm --filter @lateen-os/typescript-config test",
+      "status": "pass",
+      "durationMs": 1430,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/shared-kernel",
+      "cmd": "pnpm --filter @lateen-os/shared-kernel build",
+      "status": "pass",
+      "durationMs": 2901,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/shared-kernel",
+      "cmd": "pnpm --filter @lateen-os/shared-kernel typecheck",
+      "status": "pass",
+      "durationMs": 2487,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/shared-kernel",
+      "cmd": "pnpm --filter @lateen-os/shared-kernel test",
+      "status": "pass",
+      "durationMs": 1587,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/business-dna",
+      "cmd": "pnpm --filter @lateen-os/business-dna build",
+      "status": "pass",
+      "durationMs": 2307,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/business-dna",
+      "cmd": "pnpm --filter @lateen-os/business-dna typecheck",
+      "status": "pass",
+      "durationMs": 1988,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/business-dna",
+      "cmd": "pnpm --filter @lateen-os/business-dna test",
+      "status": "pass",
+      "durationMs": 1384,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/domain-graph",
+      "cmd": "pnpm --filter @lateen-os/domain-graph build",
+      "status": "pass",
+      "durationMs": 2258,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/domain-graph",
+      "cmd": "pnpm --filter @lateen-os/domain-graph typecheck",
+      "status": "pass",
+      "durationMs": 2126,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/domain-graph",
+      "cmd": "pnpm --filter @lateen-os/domain-graph test",
+      "status": "pass",
+      "durationMs": 1538,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/institutional-memory",
+      "cmd": "pnpm --filter @lateen-os/institutional-memory build",
+      "status": "pass",
+      "durationMs": 2535,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/institutional-memory",
+      "cmd": "pnpm --filter @lateen-os/institutional-memory typecheck",
+      "status": "pass",
+      "durationMs": 2415,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/institutional-memory",
+      "cmd": "pnpm --filter @lateen-os/institutional-memory test",
+      "status": "pass",
+      "durationMs": 1421,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/decision-engine",
+      "cmd": "pnpm --filter @lateen-os/decision-engine build",
+      "status": "pass",
+      "durationMs": 2274,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/decision-engine",
+      "cmd": "pnpm --filter @lateen-os/decision-engine typecheck",
+      "status": "pass",
+      "durationMs": 2060,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/decision-engine",
+      "cmd": "pnpm --filter @lateen-os/decision-engine test",
+      "status": "pass",
+      "durationMs": 1407,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/intelligence-engine",
+      "cmd": "pnpm --filter @lateen-os/intelligence-engine build",
+      "status": "pass",
+      "durationMs": 2221,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/intelligence-engine",
+      "cmd": "pnpm --filter @lateen-os/intelligence-engine typecheck",
+      "status": "pass",
+      "durationMs": 2222,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/intelligence-engine",
+      "cmd": "pnpm --filter @lateen-os/intelligence-engine test",
+      "status": "pass",
+      "durationMs": 1391,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/capability-engine",
+      "cmd": "pnpm --filter @lateen-os/capability-engine build",
+      "status": "pass",
+      "durationMs": 1910,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/capability-engine",
+      "cmd": "pnpm --filter @lateen-os/capability-engine typecheck",
+      "status": "pass",
+      "durationMs": 1848,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/capability-engine",
+      "cmd": "pnpm --filter @lateen-os/capability-engine test",
+      "status": "pass",
+      "durationMs": 1418,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-brain",
+      "cmd": "pnpm --filter @lateen-os/ai-brain build",
+      "status": "pass",
+      "durationMs": 3015,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-brain",
+      "cmd": "pnpm --filter @lateen-os/ai-brain typecheck",
+      "status": "pass",
+      "durationMs": 2950,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-brain",
+      "cmd": "pnpm --filter @lateen-os/ai-brain test",
+      "status": "pass",
+      "durationMs": 2054,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-runtime",
+      "cmd": "pnpm --filter @lateen-os/ai-runtime build",
+      "status": "pass",
+      "durationMs": 3153,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-runtime",
+      "cmd": "pnpm --filter @lateen-os/ai-runtime typecheck",
+      "status": "pass",
+      "durationMs": 2456,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-runtime",
+      "cmd": "pnpm --filter @lateen-os/ai-runtime test",
+      "status": "pass",
+      "durationMs": 1372,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-workforce",
+      "cmd": "pnpm --filter @lateen-os/ai-workforce build",
+      "status": "pass",
+      "durationMs": 2350,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-workforce",
+      "cmd": "pnpm --filter @lateen-os/ai-workforce typecheck",
+      "status": "pass",
+      "durationMs": 2234,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-workforce",
+      "cmd": "pnpm --filter @lateen-os/ai-workforce test",
+      "status": "pass",
+      "durationMs": 1335,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/workflow-engine",
+      "cmd": "pnpm --filter @lateen-os/workflow-engine build",
+      "status": "pass",
+      "durationMs": 2285,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/workflow-engine",
+      "cmd": "pnpm --filter @lateen-os/workflow-engine typecheck",
+      "status": "pass",
+      "durationMs": 2164,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/workflow-engine",
+      "cmd": "pnpm --filter @lateen-os/workflow-engine test",
+      "status": "pass",
+      "durationMs": 1312,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/multi-agent",
+      "cmd": "pnpm --filter @lateen-os/multi-agent build",
+      "status": "pass",
+      "durationMs": 2280,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/multi-agent",
+      "cmd": "pnpm --filter @lateen-os/multi-agent typecheck",
+      "status": "pass",
+      "durationMs": 2221,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/multi-agent",
+      "cmd": "pnpm --filter @lateen-os/multi-agent test",
+      "status": "pass",
+      "durationMs": 1312,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-provider-hub",
+      "cmd": "pnpm --filter @lateen-os/ai-provider-hub build",
+      "status": "pass",
+      "durationMs": 2851,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-provider-hub",
+      "cmd": "pnpm --filter @lateen-os/ai-provider-hub typecheck",
+      "status": "pass",
+      "durationMs": 2579,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/ai-provider-hub",
+      "cmd": "pnpm --filter @lateen-os/ai-provider-hub test",
+      "status": "pass",
+      "durationMs": 2880,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/connector-base",
+      "cmd": "pnpm --filter @lateen-os/connector-base build",
+      "status": "pass",
+      "durationMs": 2295,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/connector-base",
+      "cmd": "pnpm --filter @lateen-os/connector-base typecheck",
+      "status": "pass",
+      "durationMs": 2213,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/connector-base",
+      "cmd": "pnpm --filter @lateen-os/connector-base test",
+      "status": "pass",
+      "durationMs": 3423,
+      "step": "test"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/integration-contracts",
+      "cmd": "pnpm --filter @lateen-os/integration-contracts build",
+      "status": "pass",
+      "durationMs": 1968,
+      "step": "build"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/integration-contracts",
+      "cmd": "pnpm --filter @lateen-os/integration-contracts typecheck",
+      "status": "pass",
+      "durationMs": 1948,
+      "step": "typecheck"
+    },
+    {
+      "phase": "foundation",
+      "pkg": "@lateen-os/integration-contracts",
+      "cmd": "pnpm --filter @lateen-os/integration-contracts test",
+      "status": "pass",
+      "durationMs": 2663,
+      "step": "test"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/sdk",
+      "cmd": "pnpm --filter @lateen-os/sdk build",
+      "status": "pass",
+      "durationMs": 5906,
+      "step": "build"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/sdk",
+      "cmd": "pnpm --filter @lateen-os/sdk typecheck",
+      "status": "pass",
+      "durationMs": 2996,
+      "step": "typecheck"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/sdk",
+      "cmd": "pnpm --filter @lateen-os/sdk test",
+      "status": "pass",
+      "durationMs": 3277,
+      "step": "test"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/extension-system",
+      "cmd": "pnpm --filter @lateen-os/extension-system build",
+      "status": "pass",
+      "durationMs": 3005,
+      "step": "build"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/extension-system",
+      "cmd": "pnpm --filter @lateen-os/extension-system typecheck",
+      "status": "pass",
+      "durationMs": 3072,
+      "step": "typecheck"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/extension-system",
+      "cmd": "pnpm --filter @lateen-os/extension-system test",
+      "status": "pass",
+      "durationMs": 3823,
+      "step": "test"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/kernel",
+      "cmd": "pnpm --filter @lateen-os/kernel build",
+      "status": "pass",
+      "durationMs": 3346,
+      "step": "build"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/kernel",
+      "cmd": "pnpm --filter @lateen-os/kernel typecheck",
+      "status": "pass",
+      "durationMs": 2934,
+      "step": "typecheck"
+    },
+    {
+      "phase": "platform-core",
+      "pkg": "@lateen-os/kernel",
+      "cmd": "pnpm --filter @lateen-os/kernel test",
+      "status": "pass",
+      "durationMs": 2887,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/business-dna-service",
+      "cmd": "pnpm --filter @lateen-os/business-dna-service build",
+      "status": "pass",
+      "durationMs": 8229,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/business-dna-service",
+      "cmd": "pnpm --filter @lateen-os/business-dna-service typecheck",
+      "status": "pass",
+      "durationMs": 7727,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/business-dna-service",
+      "cmd": "pnpm --filter @lateen-os/business-dna-service test",
+      "status": "pass",
+      "durationMs": 3781,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/identity-service",
+      "cmd": "pnpm --filter @lateen-os/identity-service build",
+      "status": "pass",
+      "durationMs": 6614,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/identity-service",
+      "cmd": "pnpm --filter @lateen-os/identity-service typecheck",
+      "status": "pass",
+      "durationMs": 5923,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/identity-service",
+      "cmd": "pnpm --filter @lateen-os/identity-service test",
+      "status": "pass",
+      "durationMs": 4121,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/product-discovery-service",
+      "cmd": "pnpm --filter @lateen-os/product-discovery-service build",
+      "status": "pass",
+      "durationMs": 6239,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/product-discovery-service",
+      "cmd": "pnpm --filter @lateen-os/product-discovery-service typecheck",
+      "status": "pass",
+      "durationMs": 5996,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/product-discovery-service",
+      "cmd": "pnpm --filter @lateen-os/product-discovery-service test",
+      "status": "pass",
+      "durationMs": 3537,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/integration-hub",
+      "cmd": "pnpm --filter @lateen-os/integration-hub build",
+      "status": "pass",
+      "durationMs": 6394,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/integration-hub",
+      "cmd": "pnpm --filter @lateen-os/integration-hub typecheck",
+      "status": "pass",
+      "durationMs": 5727,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/integration-hub",
+      "cmd": "pnpm --filter @lateen-os/integration-hub test",
+      "status": "pass",
+      "durationMs": 3933,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/mission-scheduler",
+      "cmd": "pnpm --filter @lateen-os/mission-scheduler build",
+      "status": "pass",
+      "durationMs": 5965,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/mission-scheduler",
+      "cmd": "pnpm --filter @lateen-os/mission-scheduler typecheck",
+      "status": "pass",
+      "durationMs": 5759,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/mission-scheduler",
+      "cmd": "pnpm --filter @lateen-os/mission-scheduler test",
+      "status": "pass",
+      "durationMs": 4008,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/marketplace-service",
+      "cmd": "pnpm --filter @lateen-os/marketplace-service build",
+      "status": "pass",
+      "durationMs": 6144,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/marketplace-service",
+      "cmd": "pnpm --filter @lateen-os/marketplace-service typecheck",
+      "status": "pass",
+      "durationMs": 5838,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/marketplace-service",
+      "cmd": "pnpm --filter @lateen-os/marketplace-service test",
+      "status": "pass",
+      "durationMs": 4273,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/provisioning-service",
+      "cmd": "pnpm --filter @lateen-os/provisioning-service build",
+      "status": "pass",
+      "durationMs": 5503,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/provisioning-service",
+      "cmd": "pnpm --filter @lateen-os/provisioning-service typecheck",
+      "status": "pass",
+      "durationMs": 5655,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/provisioning-service",
+      "cmd": "pnpm --filter @lateen-os/provisioning-service test",
+      "status": "pass",
+      "durationMs": 3925,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/api-gateway-service",
+      "cmd": "pnpm --filter @lateen-os/api-gateway-service build",
+      "status": "pass",
+      "durationMs": 4531,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/api-gateway-service",
+      "cmd": "pnpm --filter @lateen-os/api-gateway-service typecheck",
+      "status": "pass",
+      "durationMs": 4111,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/api-gateway-service",
+      "cmd": "pnpm --filter @lateen-os/api-gateway-service test",
+      "status": "pass",
+      "durationMs": 4094,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/knowledge-platform-service",
+      "cmd": "pnpm --filter @lateen-os/knowledge-platform-service build",
+      "status": "pass",
+      "durationMs": 6038,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/knowledge-platform-service",
+      "cmd": "pnpm --filter @lateen-os/knowledge-platform-service typecheck",
+      "status": "pass",
+      "durationMs": 5495,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/knowledge-platform-service",
+      "cmd": "pnpm --filter @lateen-os/knowledge-platform-service test",
+      "status": "pass",
+      "durationMs": 3811,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/search-platform-service",
+      "cmd": "pnpm --filter @lateen-os/search-platform-service build",
+      "status": "pass",
+      "durationMs": 4437,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/search-platform-service",
+      "cmd": "pnpm --filter @lateen-os/search-platform-service typecheck",
+      "status": "pass",
+      "durationMs": 3835,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/search-platform-service",
+      "cmd": "pnpm --filter @lateen-os/search-platform-service test",
+      "status": "pass",
+      "durationMs": 3537,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/analytics-platform-service",
+      "cmd": "pnpm --filter @lateen-os/analytics-platform-service build",
+      "status": "pass",
+      "durationMs": 4341,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/analytics-platform-service",
+      "cmd": "pnpm --filter @lateen-os/analytics-platform-service typecheck",
+      "status": "pass",
+      "durationMs": 3866,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/analytics-platform-service",
+      "cmd": "pnpm --filter @lateen-os/analytics-platform-service test",
+      "status": "pass",
+      "durationMs": 3518,
+      "step": "test"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/cloud-control-plane-service",
+      "cmd": "pnpm --filter @lateen-os/cloud-control-plane-service build",
+      "status": "pass",
+      "durationMs": 5580,
+      "step": "build"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/cloud-control-plane-service",
+      "cmd": "pnpm --filter @lateen-os/cloud-control-plane-service typecheck",
+      "status": "pass",
+      "durationMs": 5443,
+      "step": "typecheck"
+    },
+    {
+      "phase": "services",
+      "pkg": "@lateen-os/cloud-control-plane-service",
+      "cmd": "pnpm --filter @lateen-os/cloud-control-plane-service test",
+      "status": "pass",
+      "durationMs": 3551,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ai-product-manager",
+      "cmd": "pnpm --filter @lateen-os/ai-product-manager build",
+      "status": "pass",
+      "durationMs": 25869,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ai-product-manager",
+      "cmd": "pnpm --filter @lateen-os/ai-product-manager typecheck",
+      "status": "pass",
+      "durationMs": 3256,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ai-product-manager",
+      "cmd": "pnpm --filter @lateen-os/ai-product-manager test",
+      "status": "pass",
+      "durationMs": 1254,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/business-dna-studio",
+      "cmd": "pnpm --filter @lateen-os/business-dna-studio build",
+      "status": "pass",
+      "durationMs": 25268,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/business-dna-studio",
+      "cmd": "pnpm --filter @lateen-os/business-dna-studio typecheck",
+      "status": "pass",
+      "durationMs": 3305,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/business-dna-studio",
+      "cmd": "pnpm --filter @lateen-os/business-dna-studio test",
+      "status": "pass",
+      "durationMs": 1268,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ceo-cockpit",
+      "cmd": "pnpm --filter @lateen-os/ceo-cockpit build",
+      "status": "pass",
+      "durationMs": 29485,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ceo-cockpit",
+      "cmd": "pnpm --filter @lateen-os/ceo-cockpit typecheck",
+      "status": "pass",
+      "durationMs": 3390,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ceo-cockpit",
+      "cmd": "pnpm --filter @lateen-os/ceo-cockpit test",
+      "status": "pass",
+      "durationMs": 1297,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/customer-portal",
+      "cmd": "pnpm --filter @lateen-os/customer-portal build",
+      "status": "pass",
+      "durationMs": 26179,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/customer-portal",
+      "cmd": "pnpm --filter @lateen-os/customer-portal typecheck",
+      "status": "pass",
+      "durationMs": 3335,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/customer-portal",
+      "cmd": "pnpm --filter @lateen-os/customer-portal test",
+      "status": "pass",
+      "durationMs": 3346,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/lateen-assistant",
+      "cmd": "pnpm --filter @lateen-os/lateen-assistant build",
+      "status": "pass",
+      "durationMs": 27816,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/lateen-assistant",
+      "cmd": "pnpm --filter @lateen-os/lateen-assistant typecheck",
+      "status": "pass",
+      "durationMs": 3762,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/lateen-assistant",
+      "cmd": "pnpm --filter @lateen-os/lateen-assistant test",
+      "status": "pass",
+      "durationMs": 3405,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/marketplace",
+      "cmd": "pnpm --filter @lateen-os/marketplace build",
+      "status": "pass",
+      "durationMs": 22520,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/marketplace",
+      "cmd": "pnpm --filter @lateen-os/marketplace typecheck",
+      "status": "pass",
+      "durationMs": 3433,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/marketplace",
+      "cmd": "pnpm --filter @lateen-os/marketplace test",
+      "status": "pass",
+      "durationMs": 2972,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/setup-wizard",
+      "cmd": "pnpm --filter @lateen-os/setup-wizard build",
+      "status": "pass",
+      "durationMs": 23668,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/setup-wizard",
+      "cmd": "pnpm --filter @lateen-os/setup-wizard typecheck",
+      "status": "pass",
+      "durationMs": 3439,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/setup-wizard",
+      "cmd": "pnpm --filter @lateen-os/setup-wizard test",
+      "status": "pass",
+      "durationMs": 3186,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/admin-gateway",
+      "cmd": "pnpm --filter @lateen-os/admin-gateway build",
+      "status": "pass",
+      "durationMs": 23436,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/admin-gateway",
+      "cmd": "pnpm --filter @lateen-os/admin-gateway typecheck",
+      "status": "pass",
+      "durationMs": 3430,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/admin-gateway",
+      "cmd": "pnpm --filter @lateen-os/admin-gateway test",
+      "status": "pass",
+      "durationMs": 2890,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/search-center",
+      "cmd": "pnpm --filter @lateen-os/search-center build",
+      "status": "pass",
+      "durationMs": 21680,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/search-center",
+      "cmd": "pnpm --filter @lateen-os/search-center typecheck",
+      "status": "pass",
+      "durationMs": 3099,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/search-center",
+      "cmd": "pnpm --filter @lateen-os/search-center test",
+      "status": "pass",
+      "durationMs": 2985,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ai-studio",
+      "cmd": "pnpm --filter @lateen-os/ai-studio build",
+      "status": "pass",
+      "durationMs": 26654,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ai-studio",
+      "cmd": "pnpm --filter @lateen-os/ai-studio typecheck",
+      "status": "pass",
+      "durationMs": 3696,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/ai-studio",
+      "cmd": "pnpm --filter @lateen-os/ai-studio test",
+      "status": "pass",
+      "durationMs": 2845,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/automation-studio",
+      "cmd": "pnpm --filter @lateen-os/automation-studio build",
+      "status": "pass",
+      "durationMs": 25939,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/automation-studio",
+      "cmd": "pnpm --filter @lateen-os/automation-studio typecheck",
+      "status": "pass",
+      "durationMs": 3368,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/automation-studio",
+      "cmd": "pnpm --filter @lateen-os/automation-studio test",
+      "status": "pass",
+      "durationMs": 2857,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/analytics-center",
+      "cmd": "pnpm --filter @lateen-os/analytics-center build",
+      "status": "pass",
+      "durationMs": 26317,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/analytics-center",
+      "cmd": "pnpm --filter @lateen-os/analytics-center typecheck",
+      "status": "pass",
+      "durationMs": 4221,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/analytics-center",
+      "cmd": "pnpm --filter @lateen-os/analytics-center test",
+      "status": "pass",
+      "durationMs": 4117,
+      "step": "test"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/cloud-console",
+      "cmd": "pnpm --filter @lateen-os/cloud-console build",
+      "status": "pass",
+      "durationMs": 28297,
+      "step": "build"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/cloud-console",
+      "cmd": "pnpm --filter @lateen-os/cloud-console typecheck",
+      "status": "pass",
+      "durationMs": 3250,
+      "step": "typecheck"
+    },
+    {
+      "phase": "applications",
+      "pkg": "@lateen-os/cloud-console",
+      "cmd": "pnpm --filter @lateen-os/cloud-console test",
+      "status": "pass",
+      "durationMs": 3038,
+      "step": "test"
+    }
+  ]
+}

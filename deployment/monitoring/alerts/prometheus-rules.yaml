@@ -1,0 +1,25 @@
+groups:
+  - name: lateen-platform
+    rules:
+      - alert: LateenBackendDown
+        expr: up{job=~"lateen-backends"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          team: platform
+        annotations:
+          summary: "Lateen backend {{ $labels.instance }} is down"
+      - alert: LateenHighMemory
+        expr: container_memory_usage_bytes{namespace="lateen-os"} / container_spec_memory_limit_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} memory usage above 90%"
+      - alert: LateenPostgresBackupFailed
+        expr: kube_job_status_failed{job_name=~"lateen-os-postgres-backup.*"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL backup job failed"

@@ -1,0 +1,15 @@
+{
+  "id": "provisioning-service",
+  "name": "provisioning-service",
+  "displayName": "Provisioning Service",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "UNLICENSED",
+  "description": "Enterprise provisioning orchestration service",
+  "category": "platform",
+  "type": "service",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [],
+  "dependencies": []
+}

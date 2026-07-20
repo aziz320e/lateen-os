@@ -1,0 +1,7 @@
+{
+  "id": "ai-studio",
+  "name": "AI Studio",
+  "version": "0.0.0",
+  "type": "application",
+  "description": "No-code environment for designing, testing, and deploying AI Workers"
+}

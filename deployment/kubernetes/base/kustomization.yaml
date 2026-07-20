@@ -1,0 +1,19 @@
+# Lateen OS — Kubernetes base manifests
+# Generated from Helm chart; use overlays for environment-specific settings.
+# Prefer: helm install -f values-dev.yaml
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: lateen-os
+
+resources:
+  - namespace.yaml
+  - rbac.yaml
+  - configmap-platform.yaml
+  - secret-platform.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: lateen-os
+      app.kubernetes.io/managed-by: kustomize

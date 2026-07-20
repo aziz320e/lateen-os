@@ -1,0 +1,251 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'apps/**'
+      - 'services/**'
+      - 'packages/**'
+      - 'deployment/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+concurrency:
+  group: deploy-${{ github.ref }}-${{ inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAMESPACE: lateen-os
+
+jobs:
+  quality:
+    name: Lint, Typecheck, Build, Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+
+  docker-backend:
+    name: Build Backend — ${{ matrix.name }}
+    needs: quality
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: business-dna-service
+            path: services/business-dna-service
+            package: '@lateen-os/business-dna-service'
+            port: 4001
+          - name: product-discovery
+            path: services/product-discovery
+            package: '@lateen-os/product-discovery'
+            port: 4002
+          - name: identity-service
+            path: services/identity-service
+            package: '@lateen-os/identity-service'
+            port: 4003
+          - name: integration-hub
+            path: services/integration-hub
+            package: '@lateen-os/integration-hub'
+            port: 4004
+          - name: mission-scheduler
+            path: services/mission-scheduler
+            package: '@lateen-os/mission-scheduler'
+            port: 4005
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployment/docker/Dockerfile.backend
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.name }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.name }}:latest
+          build-args: |
+            SERVICE_PACKAGE=${{ matrix.package }}
+            SERVICE_PATH=${{ matrix.path }}
+            SERVICE_PORT=${{ matrix.port }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  docker-frontend:
+    name: Build Frontend — ${{ matrix.name }}
+    needs: quality
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ai-product-manager
+            path: apps/ai-product-manager
+            package: '@lateen-os/ai-product-manager'
+            port: 3000
+          - name: business-dna-studio
+            path: apps/business-dna-studio
+            package: '@lateen-os/business-dna-studio'
+            port: 3001
+          - name: ceo-cockpit
+            path: apps/ceo-cockpit
+            package: '@lateen-os/ceo-cockpit'
+            port: 3002
+          - name: customer-portal
+            path: apps/customer-portal
+            package: '@lateen-os/customer-portal'
+            port: 3003
+          - name: lateen-assistant
+            path: apps/lateen-assistant
+            package: '@lateen-os/lateen-assistant'
+            port: 3004
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deployment/docker/Dockerfile.frontend
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.name }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.name }}:latest
+          build-args: |
+            APP_PACKAGE=${{ matrix.package }}
+            APP_PATH=${{ matrix.path }}
+            APP_PORT=${{ matrix.port }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  security:
+    name: Security Scan & SBOM
+    needs: [docker-backend, docker-frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    strategy:
+      matrix:
+        image:
+          - business-dna-service
+          - product-discovery
+          - identity-service
+          - integration-hub
+          - mission-scheduler
+          - ai-product-manager
+          - business-dna-studio
+          - ceo-cockpit
+          - customer-portal
+          - lateen-assistant
+    steps:
+      - uses: actions/checkout@v4
+      - uses: anchore/sbom-action@v0
+        with:
+          artifact-name: sbom-${{ matrix.image }}
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ github.sha }}
+      - uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ github.sha }}
+          format: sarif
+          output: trivy-${{ matrix.image }}.sarif
+          severity: CRITICAL,HIGH
+        continue-on-error: true
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-${{ matrix.image }}.sarif
+        continue-on-error: true
+
+  helm-validate:
+    name: Helm & K8s Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.14.4
+      - name: Helm lint
+        run: |
+          helm lint deployment/helm/lateen-os
+          helm lint deployment/helm/lateen-os -f deployment/helm/lateen-os/values-dev.yaml
+          helm lint deployment/helm/lateen-os -f deployment/helm/lateen-os/values-staging.yaml
+          helm lint deployment/helm/lateen-os -f deployment/helm/lateen-os/values-prod.yaml
+      - name: Helm template
+        run: |
+          helm template lateen-os deployment/helm/lateen-os -f deployment/helm/lateen-os/values-prod.yaml > /tmp/rendered.yaml
+          wc -l /tmp/rendered.yaml
+      - name: Kubeconform
+        uses: docker://ghcr.io/yannh/kubeconform:latest
+        with:
+          args: -summary /tmp/rendered.yaml
+        continue-on-error: true
+
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init -backend=false
+        working-directory: deployment/terraform
+      - run: terraform validate
+        working-directory: deployment/terraform
+
+  deploy:
+    name: Deploy — ${{ inputs.environment || 'dev' }}
+    needs: [security, helm-validate, terraform-validate]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+      - name: Deploy with Helm
+        run: |
+          VALUES="deployment/helm/lateen-os/values-${{ inputs.environment == 'production' && 'prod' || inputs.environment }}.yaml"
+          helm upgrade --install lateen-os deployment/helm/lateen-os \
+            -f "$VALUES" \
+            --set global.imageTag=${{ github.sha }} \
+            --namespace lateen-os \
+            --create-namespace \
+            --dry-run

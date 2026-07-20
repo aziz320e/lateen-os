@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/provisioning-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProvisioningStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ProvisioningStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+model ProvisioningJobRecord {
+  id              String             @id @default(uuid())
+  organizationName String
+  profile         String
+  industry        String?
+  country         String?
+  timezone        String             @default("UTC")
+  currency        String             @default("USD")
+  language        String             @default("en")
+  employeeCount   Int                @default(1)
+  extensions      String[]           @default([])
+  aiWorkers       String[]           @default([])
+  status          ProvisioningStatus @default(PENDING)
+  currentStep     String?
+  report          Json?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  completedAt     DateTime?
+  steps           ProvisioningStepRecord[]
+}
+
+model ProvisioningStepRecord {
+  id        String                 @id @default(uuid())
+  jobId     String
+  job       ProvisioningJobRecord  @relation(fields: [jobId], references: [id])
+  stepId    String
+  name      String
+  status    ProvisioningStepStatus @default(PENDING)
+  message   String?
+  output    Json?
+  startedAt DateTime?
+  completedAt DateTime?
+
+  @@unique([jobId, stepId])
+}

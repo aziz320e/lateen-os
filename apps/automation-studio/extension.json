@@ -1,0 +1,7 @@
+{
+  "id": "automation-studio",
+  "name": "Automation Studio",
+  "version": "0.0.0",
+  "type": "application",
+  "description": "No-code automation designer for Lateen OS"
+}

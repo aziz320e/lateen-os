@@ -1,0 +1,73 @@
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: redis
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      name: redis
+  selector:
+    lateen.io/component: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      lateen.io/component: redis
+  template:
+    metadata:
+      labels:
+        lateen.io/component: redis
+        {{- include "lateen.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          args:
+            - redis-server
+            - --requirepass
+            - $(REDIS_PASSWORD)
+            - --appendonly
+            - "yes"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lateen.fullname" . }}-secrets
+                  key: LATEEN_REDIS_PASSWORD
+          ports:
+            - containerPort: 6379
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+{{- end }}

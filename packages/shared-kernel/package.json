@@ -1,0 +1,51 @@
+{
+  "name": "@lateen-os/shared-kernel",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared Kernel — foundational DDD building blocks for Lateen OS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./identity": {
+      "types": "./dist/identity/index.d.ts",
+      "import": "./dist/identity/index.js"
+    },
+    "./common": {
+      "types": "./dist/common/index.d.ts",
+      "import": "./dist/common/index.js"
+    },
+    "./audit": {
+      "types": "./dist/audit/index.d.ts",
+      "import": "./dist/audit/index.js"
+    },
+    "./tenant": {
+      "types": "./dist/tenant/index.d.ts",
+      "import": "./dist/tenant/index.js"
+    },
+    "./time": {
+      "types": "./dist/time/index.d.ts",
+      "import": "./dist/time/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

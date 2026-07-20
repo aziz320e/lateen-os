@@ -1,0 +1,24 @@
+{
+  "id": "outlook-connector",
+  "name": "outlook-connector",
+  "displayName": "Outlook Connector",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "MIT",
+  "description": "Microsoft Outlook mail",
+  "category": "integration",
+  "type": "connector",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [
+    "integration-hub:read",
+    "integration-hub:write",
+    "network:outbound",
+    "network:inbound",
+    "events:publish"
+  ],
+  "connectors": [
+    "outlook"
+  ],
+  "main": "dist/index.js"
+}

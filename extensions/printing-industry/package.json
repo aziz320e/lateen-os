@@ -1,0 +1,26 @@
+{
+  "name": "@lateen-os/printing-industry",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Official Printing Industry Pack for Lateen OS",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@lateen-os/extension-system": "workspace:*"
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}

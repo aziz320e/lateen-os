@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/integration-hub-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConnectorCategory {
+  ERP
+  CRM
+  ECOMMERCE
+  ACCOUNTING
+  EMAIL
+  MESSAGING
+  STORAGE
+  CALENDAR
+  PAYMENTS
+  MARKETING
+  AI_PROVIDERS
+  CUSTOM_REST
+  GRAPHQL
+}
+
+enum AuthMethod {
+  OAUTH2
+  OIDC
+  API_KEY
+  BEARER_TOKEN
+  WEBHOOK_SECRET
+  BASIC_AUTH
+}
+
+enum ConnectorStatus {
+  INSTALLED
+  CONFIGURED
+  AUTHENTICATED
+  ENABLED
+  DISABLED
+  ERROR
+  REMOVED
+}
+
+enum SyncDirection {
+  PULL
+  PUSH
+  TWO_WAY
+}
+
+enum SyncJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  DEAD_LETTER
+}
+
+enum HubJobType {
+  SYNC
+  IMPORT
+  EXPORT
+  RETRY
+  CLEANUP
+}
+
+model ConnectorDefinitionRecord {
+  id          String            @id
+  code        String            @unique
+  name        String
+  category    ConnectorCategory
+  description String?
+  version     String            @default("1.0.0")
+  authMethods AuthMethod[]
+  capabilities Json             @default("[]")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model Connector {
+  id             String          @id @default(uuid())
+  organizationId String
+  definitionCode String
+  name           String
+  status         ConnectorStatus @default(INSTALLED)
+  configuration  Json            @default("{}")
+  credentialsRef String?
+  health         Json            @default("{}")
+  installedAt    DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  syncJobs       SyncJob[]
+  mappings       EntityMapping[]
+  webhooks       WebhookSubscription[]
+
+  @@index([organizationId])
+  @@index([definitionCode])
+}
+
+model EntityMapping {
+  id               String   @id @default(uuid())
+  connectorId      String
+  organizationId   String
+  externalEntity   String
+  internalEntity   String
+  transformation   Json     @default("{}")
+  validation       Json     @default("{}")
+  schemaVersion    String   @default("1.0")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  connector Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([connectorId])
+}
+
+model SyncJob {
+  id             String        @id @default(uuid())
+  connectorId    String
+  organizationId String
+  direction      SyncDirection
+  schedule       String?
+  status         SyncJobStatus @default(PENDING)
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+  stats          Json          @default("{}")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  connector Connector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  runs      SyncRun[]
+
+  @@index([connectorId])
+  @@index([organizationId])
+}
+
+model SyncRun {
+  id           String        @id @default(uuid())
+  syncJobId    String
+  status       SyncJobStatus @default(PENDING)
+  startedAt    DateTime      @default(now())
+  completedAt  DateTime?
+  recordsIn    Int           @default(0)
+  recordsOut   Int           @default(0)
+  errorMessage String?
+  latencyMs    Int?
+
+  syncJob SyncJob @relation(fields: [syncJobId], references: [id], onDelete: Cascade)
+
+  @@index([syncJobId])
+}
+
+model WebhookSubscription {
+  id             String   @id @default(uuid())
+  connectorId    String
+  organizationId String
+  eventType      String
+  secretRef      String?
+  targetUrl      String
+  enabled        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  connector  Connector         @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+
+  @@index([connectorId])
+}
+
+model WebhookDelivery {
+  id           String   @id @default(uuid())
+  webhookId    String
+  payload      Json
+  status       String   @default("received")
+  receivedAt   DateTime @default(now())
+  processedAt  DateTime?
+
+  webhook WebhookSubscription @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([webhookId])
+}
+
+model HubJob {
+  id             String     @id @default(uuid())
+  organizationId String
+  type           HubJobType
+  connectorId    String?
+  status         String     @default("queued")
+  payload        Json       @default("{}")
+  attempts       Int        @default(0)
+  errorMessage   String?
+  queuedAt       DateTime   @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  @@index([organizationId])
+  @@index([status])
+}

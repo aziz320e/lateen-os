@@ -1,0 +1,90 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/knowledge-platform-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KnowledgeJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum PipelineStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+model KnowledgeJobRecord {
+  id               String             @id @default(uuid())
+  organizationId   String
+  title            String
+  knowledgeType    String
+  sourceType       String
+  sourceUri        String?
+  mimeType         String?
+  language         String?
+  classification   String             @default("internal")
+  securityLevel    String             @default("standard")
+  tags             String[]           @default([])
+  department       String?
+  owner            String?
+  author           String?
+  status           KnowledgeJobStatus @default(PENDING)
+  currentStep      String?
+  knowledgeId      String?
+  metadata         Json?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  completedAt      DateTime?
+  steps            PipelineStepRecord[]
+}
+
+model PipelineStepRecord {
+  id          String             @id @default(uuid())
+  jobId       String
+  job         KnowledgeJobRecord @relation(fields: [jobId], references: [id])
+  stepId      String
+  name        String
+  status      PipelineStepStatus   @default(PENDING)
+  message     String?
+  output      Json?
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@unique([jobId, stepId])
+}
+
+model KnowledgeDocumentRecord {
+  id              String   @id @default(uuid())
+  organizationId  String
+  jobId           String?
+  title           String
+  knowledgeType   String
+  sourceType      String
+  language        String?
+  classification  String
+  securityLevel   String
+  tags            String[] @default([])
+  department      String?
+  owner           String?
+  author          String?
+  version         Int      @default(1)
+  chunkCount      Int      @default(0)
+  indexed         Boolean  @default(false)
+  links           Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([knowledgeType])
+  @@index([department])
+}

@@ -1,0 +1,27 @@
+global:
+  environment: staging
+  imageTag: staging
+  ingress:
+    host: staging.lateen.io
+  tls:
+    enabled: true
+
+backends:
+  identity-service:
+    replicas: 2
+  business-dna-service:
+    replicas: 2
+
+frontends:
+  customer-portal:
+    replicas: 2
+  lateen-assistant:
+    replicas: 2
+
+secrets:
+  externalSecrets:
+    enabled: true
+
+monitoring:
+  alerts:
+    enabled: true

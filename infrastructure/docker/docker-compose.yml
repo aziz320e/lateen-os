@@ -1,0 +1,338 @@
+# Lateen OS — Local Platform Infrastructure
+# Production-style Docker Compose for local development.
+#
+# Usage:
+#   docker compose --env-file ../environments/.env.development up -d
+#
+# See docs/infrastructure/LOCAL_DEVELOPMENT.md
+
+name: lateen-os
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lateen-postgres
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    environment:
+      POSTGRES_USER: ${LATEEN_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${LATEEN_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${LATEEN_POSTGRES_DB}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command:
+      - postgres
+      - -c
+      - max_connections=${LATEEN_POSTGRES_MAX_CONNECTIONS}
+      - -c
+      - shared_buffers=${LATEEN_POSTGRES_SHARED_BUFFERS}
+    ports:
+      - '${LATEEN_POSTGRES_HOST_PORT}:5432'
+    volumes:
+      - lateen-postgres-data:/var/lib/postgresql/data
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${LATEEN_POSTGRES_USER} -d ${LATEEN_POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_POSTGRES_CPU}'
+          memory: ${LATEEN_POSTGRES_MEM}
+    labels:
+      lateen.service: postgres
+      lateen.layer: infrastructure
+
+  redis:
+    image: redis:7-alpine
+    container_name: lateen-redis
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    command:
+      - redis-server
+      - --requirepass
+      - ${LATEEN_REDIS_PASSWORD}
+      - --appendonly
+      - 'yes'
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    ports:
+      - '${LATEEN_REDIS_HOST_PORT}:6379'
+    volumes:
+      - lateen-redis-data:/data
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${LATEEN_REDIS_PASSWORD}', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_REDIS_CPU}'
+          memory: ${LATEEN_REDIS_MEM}
+    labels:
+      lateen.service: redis
+      lateen.layer: infrastructure
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: lateen-nats
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    command:
+      - '-js'
+      - '-sd=/data'
+      - '-m=${LATEEN_NATS_MONITORING_PORT}'
+    ports:
+      - '${LATEEN_NATS_HOST_CLIENT_PORT}:4222'
+      - '${LATEEN_NATS_HOST_MONITORING_PORT}:${LATEEN_NATS_MONITORING_PORT}'
+    volumes:
+      - lateen-nats-data:/data
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:${LATEEN_NATS_MONITORING_PORT}/healthz']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_NATS_CPU}'
+          memory: ${LATEEN_NATS_MEM}
+    labels:
+      lateen.service: nats
+      lateen.layer: infrastructure
+
+  minio:
+    image: minio/minio:RELEASE.2024-12-18T13-15-44Z
+    container_name: lateen-minio
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    environment:
+      MINIO_ROOT_USER: ${LATEEN_MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${LATEEN_MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    ports:
+      - '${LATEEN_MINIO_HOST_API_PORT}:9000'
+      - '${LATEEN_MINIO_HOST_CONSOLE_PORT}:9001'
+    volumes:
+      - lateen-minio-data:/data
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_MINIO_CPU}'
+          memory: ${LATEEN_MINIO_MEM}
+    labels:
+      lateen.service: minio
+      lateen.layer: infrastructure
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    container_name: lateen-qdrant
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    environment:
+      QDRANT__SERVICE__GRPC_PORT: ${LATEEN_QDRANT_GRPC_PORT}
+      QDRANT__SERVICE__HTTP_PORT: ${LATEEN_QDRANT_HTTP_PORT}
+    ports:
+      - '${LATEEN_QDRANT_HOST_HTTP_PORT}:6333'
+      - '${LATEEN_QDRANT_HOST_GRPC_PORT}:6334'
+    volumes:
+      - lateen-qdrant-data:/qdrant/storage
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:6333/healthz']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_QDRANT_CPU}'
+          memory: ${LATEEN_QDRANT_MEM}
+    labels:
+      lateen.service: qdrant
+      lateen.layer: infrastructure
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: lateen-prometheus
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=${LATEEN_PROMETHEUS_RETENTION}'
+      - '--web.enable-lifecycle'
+    ports:
+      - '${LATEEN_PROMETHEUS_HOST_PORT}:9090'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - lateen-prometheus-data:/prometheus
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:9090/-/healthy']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_PROMETHEUS_CPU}'
+          memory: ${LATEEN_PROMETHEUS_MEM}
+    labels:
+      lateen.service: prometheus
+      lateen.layer: observability
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.116.1
+    container_name: lateen-otel-collector
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    command: ['--config=/etc/otelcol-contrib/otel-collector.yaml']
+    ports:
+      - '${LATEEN_OTEL_HOST_GRPC_PORT}:4317'
+      - '${LATEEN_OTEL_HOST_HTTP_PORT}:4318'
+      - '${LATEEN_OTEL_HEALTH_PORT}:13133'
+      - '${LATEEN_OTEL_METRICS_PORT}:8888'
+    volumes:
+      - ./otel/otel-collector.yaml:/etc/otelcol-contrib/otel-collector.yaml:ro
+    networks:
+      - lateen-platform
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:13133/']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_OTEL_CPU}'
+          memory: ${LATEEN_OTEL_MEM}
+    labels:
+      lateen.service: otel-collector
+      lateen.layer: observability
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: lateen-grafana
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    environment:
+      GF_SECURITY_ADMIN_USER: ${LATEEN_GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${LATEEN_GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_SERVER_ROOT_URL: ${LATEEN_GRAFANA_URL}
+    ports:
+      - '${LATEEN_GRAFANA_HOST_PORT}:3000'
+    volumes:
+      - lateen-grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - lateen-platform
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3000/api/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_GRAFANA_CPU}'
+          memory: ${LATEEN_GRAFANA_MEM}
+    labels:
+      lateen.service: grafana
+      lateen.layer: observability
+
+  pgadmin:
+    image: dpage/pgadmin4:8.14
+    container_name: lateen-pgadmin
+    restart: unless-stopped
+    env_file:
+      - ../environments/.env.development
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${LATEEN_PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${LATEEN_PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - '${LATEEN_PGADMIN_HOST_PORT}:80'
+    volumes:
+      - lateen-pgadmin-data:/var/lib/pgadmin
+    networks:
+      - lateen-platform
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:80/misc/ping']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '${LATEEN_PGADMIN_CPU}'
+          memory: ${LATEEN_PGADMIN_MEM}
+    labels:
+      lateen.service: pgadmin
+      lateen.layer: infrastructure
+
+networks:
+  lateen-platform:
+    name: ${LATEEN_NETWORK_NAME}
+    driver: bridge
+
+volumes:
+  lateen-postgres-data:
+    name: lateen-postgres-data
+  lateen-redis-data:
+    name: lateen-redis-data
+  lateen-nats-data:
+    name: lateen-nats-data
+  lateen-minio-data:
+    name: lateen-minio-data
+  lateen-qdrant-data:
+    name: lateen-qdrant-data
+  lateen-grafana-data:
+    name: lateen-grafana-data
+  lateen-prometheus-data:
+    name: lateen-prometheus-data
+  lateen-pgadmin-data:
+    name: lateen-pgadmin-data

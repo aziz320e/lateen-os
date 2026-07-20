@@ -1,0 +1,61 @@
+global:
+  environment: production
+  imageTag: prod
+  imagePullPolicy: Always
+  ingress:
+    host: app.lateen.io
+  tls:
+    enabled: true
+
+postgresql:
+  storage: 100Gi
+
+backends:
+  business-dna-service:
+    replicas: 3
+    resources:
+      requests: { cpu: 250m, memory: 512Mi }
+      limits: { cpu: 1000m, memory: 1Gi }
+  product-discovery:
+    replicas: 2
+  identity-service:
+    replicas: 3
+  integration-hub:
+    replicas: 2
+  mission-scheduler:
+    replicas: 2
+
+frontends:
+  ai-product-manager:
+    replicas: 2
+  business-dna-studio:
+    replicas: 2
+  ceo-cockpit:
+    replicas: 2
+  customer-portal:
+    replicas: 3
+  lateen-assistant:
+    replicas: 3
+
+secrets:
+  externalSecrets:
+    enabled: true
+  vault:
+    enabled: true
+
+monitoring:
+  slo:
+    availabilityTarget: 99.9
+  alerts:
+    enabled: true
+
+backups:
+  enabled: true
+  retentionDays: 30
+
+networkPolicy:
+  enabled: true
+
+rateLimit:
+  enabled: true
+  requestsPerSecond: 200

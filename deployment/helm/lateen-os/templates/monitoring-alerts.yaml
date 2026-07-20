@@ -1,0 +1,37 @@
+{{- if .Values.monitoring.alerts.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lateen.fullname" . }}-prometheus-rules
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+data:
+  lateen-slo.yaml: |
+    groups:
+      - name: lateen-slo
+        rules:
+          - alert: LateenHighErrorRate
+            expr: |
+              sum(rate(http_requests_total{status=~"5.."}[5m])) /
+              sum(rate(http_requests_total[5m])) > 0.05
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: High 5xx error rate on Lateen OS
+          - alert: LateenHighLatency
+            expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > {{ .Values.monitoring.slo.latencyP99Seconds | default 2 }}
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: P99 latency exceeds SLO ({{ .Values.monitoring.slo.latencyP99Ms }}ms)
+          - alert: LateenPodNotReady
+            expr: kube_pod_status_ready{condition="false", namespace="{{ .Release.Namespace }}"} > 0
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: One or more Lateen OS pods are not ready
+{{- end }}

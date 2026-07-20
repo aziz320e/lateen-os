@@ -1,0 +1,27 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-20T12:00:00Z",
+    "component": {
+      "type": "application",
+      "name": "lateen-os-enterprise",
+      "version": "1.0.0-rc.1"
+    }
+  },
+  "components": [
+    { "type": "library", "name": "@nestjs/common", "version": "^11.0.7", "purl": "pkg:npm/@nestjs/common" },
+    { "type": "library", "name": "fastify", "version": "^5.2.1", "purl": "pkg:npm/fastify" },
+    { "type": "library", "name": "next", "version": "^15.1.6", "purl": "pkg:npm/next" },
+    { "type": "library", "name": "react", "version": "^19.0.0", "purl": "pkg:npm/react" },
+    { "type": "library", "name": "@prisma/client", "version": "^6.3.1", "purl": "pkg:npm/@prisma/client" },
+    { "type": "library", "name": "bullmq", "version": "^5.34.8", "purl": "pkg:npm/bullmq" },
+    { "type": "library", "name": "@opentelemetry/sdk-node", "version": "^0.57.1", "purl": "pkg:npm/@opentelemetry/sdk-node" },
+    { "type": "library", "name": "zod", "version": "^3.24.1", "purl": "pkg:npm/zod" },
+    { "type": "library", "name": "pino", "version": "^9.6.0", "purl": "pkg:npm/pino" },
+    { "type": "library", "name": "turbo", "version": "^2.5.4", "purl": "pkg:npm/turbo" },
+    { "type": "library", "name": "typescript", "version": "^5.8.3", "purl": "pkg:npm/typescript" }
+  ],
+  "note": "Abbreviated SBOM for RC. Run `pnpm audit` and SBOM generator for full production SBOM."
+}

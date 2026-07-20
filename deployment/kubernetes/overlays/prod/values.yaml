@@ -1,0 +1,16 @@
+global:
+  environment: production
+  imageTag: prod
+  imagePullPolicy: Always
+
+secrets:
+  externalSecrets:
+    enabled: true
+  vault:
+    enabled: true
+
+networkPolicy:
+  enabled: true
+
+backups:
+  enabled: true

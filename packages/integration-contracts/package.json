@@ -1,0 +1,30 @@
+{
+  "name": "@lateen-os/integration-contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Integration provider contracts — shared types for connector extensions",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}

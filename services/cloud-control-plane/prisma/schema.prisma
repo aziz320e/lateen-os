@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/cloud-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionPlan {
+  COMMUNITY
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+  PARTNER
+}
+
+enum TenantStatus {
+  PROVISIONING
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+  DELETED
+}
+
+enum DeploymentEnvironment {
+  DEVELOPMENT
+  TESTING
+  STAGING
+  PRODUCTION
+}
+
+enum CloudRegion {
+  US
+  EUROPE
+  MIDDLE_EAST
+  ASIA
+  CUSTOM
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+}
+
+enum BackupType {
+  MANUAL
+  SCHEDULED
+  SNAPSHOT
+}
+
+model OrganizationRecord {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  domain    String?
+  region    CloudRegion @default(US)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenants   TenantRecord[]
+}
+
+model TenantRecord {
+  id             String           @id @default(uuid())
+  organizationId String
+  organization   OrganizationRecord @relation(fields: [organizationId], references: [id])
+  name           String
+  slug           String           @unique
+  status         TenantStatus     @default(PROVISIONING)
+  plan           SubscriptionPlan @default(COMMUNITY)
+  region         CloudRegion      @default(US)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  subscriptions  SubscriptionRecord[]
+  deployments    DeploymentRecord[]
+  usageRecords   UsageRecord[]
+  backups        BackupRecord[]
+}
+
+model SubscriptionRecord {
+  id        String           @id @default(uuid())
+  tenantId  String
+  tenant    TenantRecord     @relation(fields: [tenantId], references: [id])
+  plan      SubscriptionPlan
+  status    String           @default("active")
+  startedAt DateTime         @default(now())
+  expiresAt DateTime?
+}
+
+model DeploymentRecord {
+  id          String                @id @default(uuid())
+  tenantId    String
+  tenant      TenantRecord          @relation(fields: [tenantId], references: [id])
+  environment DeploymentEnvironment
+  region      CloudRegion
+  version     String
+  status      String                @default("pending")
+  deployedAt  DateTime?
+}
+
+model InvoiceRecord {
+  id             String        @id @default(uuid())
+  organizationId String
+  amount         Decimal       @db.Decimal(12, 2)
+  currency       String        @default("USD")
+  status         InvoiceStatus @default(DRAFT)
+  periodStart    DateTime
+  periodEnd      DateTime
+  createdAt      DateTime      @default(now())
+}
+
+model UsageRecord {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    TenantRecord @relation(fields: [tenantId], references: [id])
+  metric    String
+  value     Decimal  @db.Decimal(14, 2)
+  period    String
+  recordedAt DateTime @default(now())
+}
+
+model BackupRecord {
+  id          String     @id @default(uuid())
+  tenantId    String
+  tenant      TenantRecord @relation(fields: [tenantId], references: [id])
+  type        BackupType
+  status      String     @default("completed")
+  sizeBytes   BigInt     @default(0)
+  verified    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+}
+
+model SupportTicketRecord {
+  id             String   @id @default(uuid())
+  organizationId String
+  subject        String
+  status         String   @default("open")
+  priority       String   @default("normal")
+  createdAt      DateTime @default(now())
+}
+
+model AuditLogRecord {
+  id             String   @id @default(uuid())
+  organizationId String
+  action         String
+  actor          String
+  resource       String
+  metadata       Json?
+  createdAt      DateTime @default(now())
+}

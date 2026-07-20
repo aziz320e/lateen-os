@@ -1,0 +1,49 @@
+{
+  "name": "@lateen-os/analytics-platform-service",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Enterprise Analytics Platform — unified BI layer for Lateen OS",
+  "license": "UNLICENSED",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.7",
+    "@nestjs/core": "^11.0.7",
+    "@nestjs/platform-fastify": "^11.0.7",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.55.3",
+    "@opentelemetry/exporter-metrics-otlp-http": "^0.57.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.57.1",
+    "@opentelemetry/resources": "^1.30.1",
+    "@opentelemetry/sdk-metrics": "^1.30.1",
+    "@opentelemetry/sdk-node": "^0.57.1",
+    "@opentelemetry/semantic-conventions": "^1.28.0",
+    "bullmq": "^5.34.8",
+    "fastify": "^5.2.1",
+    "ioredis": "^5.4.2",
+    "nestjs-pino": "^4.2.0",
+    "pino": "^9.6.0",
+    "pino-http": "^10.3.0",
+    "pino-pretty": "^13.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "@nestjs/testing": "^11.0.7",
+    "@types/node": "^22.10.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}

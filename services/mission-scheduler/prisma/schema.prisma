@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/mission-scheduler-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MissionTypeCode {
+  LAUNCH_PRODUCT
+  MARKET_RESEARCH
+  COMPETITOR_REVIEW
+  PRICE_OPTIMIZATION
+  CUSTOMER_FOLLOW_UP
+  SALES_PIPELINE_REVIEW
+  PRODUCTION_OPTIMIZATION
+  INVENTORY_REVIEW
+  EXECUTIVE_REPORT
+  FINANCIAL_REVIEW
+  COMPLIANCE_AUDIT
+}
+
+enum MissionSource {
+  BUSINESS_EVENT
+  WORKFLOW_EVENT
+  DECISION_EVENT
+  INTELLIGENCE_SIGNAL
+  INSTITUTIONAL_MEMORY
+  CALENDAR_TRIGGER
+  CRON_SCHEDULE
+  CONNECTOR_WEBHOOK
+  SYSTEM_HEALTH
+  MANUAL
+}
+
+enum TriggerType {
+  MANUAL
+  CRON
+  BUSINESS_EVENT
+  WEBHOOK
+  DECISION_APPROVED
+  WORKFLOW_COMPLETED
+  CONNECTOR_SYNC
+  THRESHOLD_EXCEEDED
+}
+
+enum ScheduleMode {
+  IMMEDIATE
+  DELAYED
+  CRON
+  RECURRING
+  BUSINESS_CALENDAR
+}
+
+enum ScheduledMissionStatus {
+  PENDING
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+  RETRYING
+  DEAD_LETTER
+  EXPIRED
+}
+
+enum QueuePriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+model MissionTypeRecord {
+  id          String          @id
+  code        MissionTypeCode @unique
+  name        String
+  description String?
+  targetService String        @default("ai-product-manager")
+  createdAt   DateTime        @default(now())
+}
+
+model ScheduleRule {
+  id             String       @id @default(uuid())
+  organizationId String
+  missionType    MissionTypeCode
+  mode           ScheduleMode @default(CRON)
+  cronExpression String?
+  delaySeconds   Int?
+  timezone       String       @default("Asia/Riyadh")
+  workingHoursOnly Boolean    @default(true)
+  enabled        Boolean      @default(true)
+  priority       QueuePriority @default(NORMAL)
+  policyRef      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  missions ScheduledMission[]
+
+  @@index([organizationId])
+}
+
+model MissionTrigger {
+  id             String      @id @default(uuid())
+  organizationId String
+  type           TriggerType
+  source         MissionSource
+  missionType    MissionTypeCode
+  config         Json        @default("{}")
+  enabled        Boolean     @default(true)
+  lastFiredAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  missions ScheduledMission[]
+
+  @@index([organizationId])
+  @@index([type])
+}
+
+model CalendarRule {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  timezone       String   @default("Asia/Riyadh")
+  workingDays    Int[]    @default([0, 1, 2, 3, 4])
+  startHour      Int      @default(8)
+  endHour        Int      @default(17)
+  holidays       Json     @default("[]")
+  enabled        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+}
+
+model ScheduledMission {
+  id             String                 @id @default(uuid())
+  organizationId String
+  missionType    MissionTypeCode
+  status         ScheduledMissionStatus @default(PENDING)
+  source         MissionSource
+  triggerId      String?
+  scheduleId     String?
+  priority       QueuePriority          @default(NORMAL)
+  scheduledAt    DateTime
+  startedAt      DateTime?
+  completedAt    DateTime?
+  expiresAt      DateTime?
+  slaDeadlineAt  DateTime?
+  externalMissionId String?
+  errorMessage   String?
+  attempts       Int                    @default(0)
+  payload        Json                   @default("{}")
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  trigger  MissionTrigger? @relation(fields: [triggerId], references: [id], onDelete: SetNull)
+  schedule ScheduleRule?   @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  history  MissionExecutionHistory[]
+
+  @@index([organizationId])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+model MissionExecutionHistory {
+  id          String                 @id @default(uuid())
+  missionId   String
+  status      ScheduledMissionStatus
+  startedAt   DateTime               @default(now())
+  completedAt DateTime?
+  latencyMs   Int?
+  errorMessage String?
+  traceId     String?
+
+  mission ScheduledMission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId])
+}
+
+model SchedulerPolicy {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  rules          Json     @default("{}")
+  enabled        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
+model QueueJobRecord {
+  id             String        @id @default(uuid())
+  organizationId String
+  missionId      String
+  bullJobId      String?
+  status         String        @default("queued")
+  priority       QueuePriority @default(NORMAL)
+  attempts       Int           @default(0)
+  queuedAt       DateTime      @default(now())
+  processedAt    DateTime?
+
+  @@index([organizationId])
+  @@index([status])
+}

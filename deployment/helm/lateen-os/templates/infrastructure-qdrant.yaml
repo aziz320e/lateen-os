@@ -1,0 +1,78 @@
+{{- if .Values.qdrant.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: qdrant
+spec:
+  ports:
+    - port: 6333
+      targetPort: 6333
+      name: http
+    - port: 6334
+      targetPort: 6334
+      name: grpc
+  selector:
+    lateen.io/component: qdrant
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: qdrant
+spec:
+  serviceName: qdrant
+  replicas: 1
+  selector:
+    matchLabels:
+      lateen.io/component: qdrant
+  template:
+    metadata:
+      labels:
+        lateen.io/component: qdrant
+        {{- include "lateen.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: qdrant
+          image: {{ .Values.qdrant.image }}
+          ports:
+            - containerPort: 6333
+            - containerPort: 6334
+          volumeMounts:
+            - name: data
+              mountPath: /qdrant/storage
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 6333
+            initialDelaySeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 6333
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+{{- end }}

@@ -1,0 +1,42 @@
+{
+  "name": "@lateen-os/connector-base",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Base connector provider implementation for Lateen OS integration extensions",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./providers": {
+      "types": "./dist/providers/registry.d.ts",
+      "import": "./dist/providers/registry.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "scaffold": "tsx scripts/scaffold-providers.ts",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@lateen-os/integration-contracts": "workspace:*",
+    "@lateen-os/sdk": "workspace:*",
+    "@opentelemetry/api": "^1.9.0"
+  },
+  "devDependencies": {
+    "@lateen-os/extension-system": "workspace:*",
+    "@lateen-os/typescript-config": "workspace:*",
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}

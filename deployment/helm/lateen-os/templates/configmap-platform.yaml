@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lateen.fullname" . }}-platform
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+data:
+  LATEEN_ENVIRONMENT: {{ .Values.global.environment | quote }}
+  LATEEN_ORGANIZATION_ID: {{ .Values.global.organizationId | quote }}
+  LATEEN_TIMEZONE: {{ .Values.global.timezone | quote }}
+  LATEEN_LOG_FORMAT: {{ .Values.global.observability.logFormat | quote }}
+  LATEEN_NATS_URL: "nats://nats:4222"
+  LATEEN_OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.global.observability.otlpEndpoint | quote }}
+  LATEEN_BUSINESS_DNA_BASE_URL: "http://business-dna-service:4001"
+  LATEEN_PRODUCT_DISCOVERY_BASE_URL: "http://product-discovery:4002"
+  LATEEN_IDENTITY_BASE_URL: "http://identity-service:4003"
+  LATEEN_INTEGRATION_HUB_BASE_URL: "http://integration-hub:4004"
+  LATEEN_MISSION_SCHEDULER_BASE_URL: "http://mission-scheduler:4005"
+  LATEEN_MINIO_ENDPOINT: "http://minio:9000"
+  LATEEN_QDRANT_URL: "http://qdrant:6333"
+  CORRELATION_ID_HEADER: "x-correlation-id"

@@ -1,0 +1,67 @@
+{{- if .Values.nats.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: nats
+spec:
+  ports:
+    - port: 4222
+      targetPort: 4222
+      name: client
+    - port: 8222
+      targetPort: 8222
+      name: monitor
+  selector:
+    lateen.io/component: nats
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+    lateen.io/component: nats
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      lateen.io/component: nats
+  template:
+    metadata:
+      labels:
+        lateen.io/component: nats
+        {{- include "lateen.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: nats
+          image: {{ .Values.nats.image }}
+          args: ["-js", "-m", "8222"]
+          ports:
+            - containerPort: 4222
+            - containerPort: 8222
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8222
+            initialDelaySeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8222
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+{{- end }}

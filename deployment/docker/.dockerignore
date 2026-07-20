@@ -1,0 +1,16 @@
+# Lateen OS monorepo — Docker build context
+.git
+**/.git
+**/node_modules
+**/.next/cache
+**/dist
+**/.turbo
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/*.md
+!deployment/**
+.infrastructure/backups
+apps/**/.next
+services/**/node_modules/@prisma

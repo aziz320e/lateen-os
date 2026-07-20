@@ -1,0 +1,65 @@
+{{- if .Values.backups.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "lateen.fullname" . }}-postgres-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backups.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            lateen.io/component: backup
+            {{- include "lateen.selectorLabels" . | nindent 12 }}
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+          containers:
+            - name: pg-dump
+              image: {{ .Values.postgresql.image }}
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "lateen.fullname" . }}-secrets
+                      key: LATEEN_POSTGRES_PASSWORD
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  TS=$(date +%Y%m%d-%H%M%S)
+                  for DB in lateen_os lateen_identity lateen_integration lateen_mission_scheduler; do
+                    pg_dump -h postgres -U lateen -d "$DB" -Fc -f "/backup/${DB}-${TS}.dump"
+                  done
+                  find /backup -name "*.dump" -mtime +{{ .Values.backups.retentionDays }} -delete
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+          volumes:
+            - name: backup
+              persistentVolumeClaim:
+                claimName: {{ include "lateen.fullname" . }}-backup
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lateen.fullname" . }}-backup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" . | nindent 4 }}
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 50Gi
+{{- end }}

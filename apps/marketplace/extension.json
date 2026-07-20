@@ -1,0 +1,15 @@
+{
+  "id": "marketplace",
+  "name": "marketplace",
+  "displayName": "Lateen Marketplace",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "UNLICENSED",
+  "description": "Official extension distribution platform for Lateen OS",
+  "category": "platform",
+  "type": "application",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [],
+  "dependencies": []
+}

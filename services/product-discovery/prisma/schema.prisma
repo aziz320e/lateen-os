@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/product-discovery-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DiscoveryRun {
+  id             String    @id
+  organizationId String
+  status         String
+  currentStage   String?
+  keywords       Json      @default("[]")
+  startedAt      DateTime
+  completedAt    DateTime?
+  errorMessage   String?
+  stageResults   Json      @default("{}")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  signals            Signal[]
+  opportunities      Opportunity[]
+  capabilityMatches  CapabilityMatchRecord[]
+  profitEstimates    ProfitEstimateRecord[]
+  recommendations    RecommendationRecord[]
+  workflowExecutions WorkflowExecution[]
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Signal {
+  id             String   @id
+  runId          String
+  organizationId String
+  signalType     String
+  source         String?
+  data           Json
+  createdAt      DateTime @default(now())
+
+  run DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([organizationId])
+}
+
+model Opportunity {
+  id             String   @id
+  runId          String
+  organizationId String
+  data           Json
+  createdAt      DateTime @default(now())
+
+  run DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model CapabilityMatchRecord {
+  id             String   @id
+  runId          String
+  organizationId String
+  data           Json
+  createdAt      DateTime @default(now())
+
+  run DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model ProfitEstimateRecord {
+  id             String   @id
+  runId          String
+  organizationId String
+  data           Json
+  createdAt      DateTime @default(now())
+
+  run DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+}
+
+model RecommendationRecord {
+  id             String   @id
+  runId          String
+  organizationId String
+  data           Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  run DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@index([organizationId])
+}
+
+model WorkflowExecution {
+  id           String    @id
+  runId        String
+  stage        String
+  status       String
+  startedAt    DateTime
+  completedAt  DateTime?
+  input        Json?
+  output       Json?
+  errorMessage String?
+
+  run DiscoveryRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@index([runId])
+  @@unique([runId, stage])
+}

@@ -1,0 +1,32 @@
+global:
+  environment: development
+  imageTag: dev
+  ingress:
+    host: dev.lateen.local
+  observability:
+    otlpEndpoint: http://otel-collector:4318
+
+postgresql:
+  storage: 5Gi
+
+backends:
+  business-dna-service:
+    replicas: 1
+  identity-service:
+    replicas: 1
+
+frontends:
+  customer-portal:
+    replicas: 1
+  lateen-assistant:
+    replicas: 1
+
+secrets:
+  externalSecrets:
+    enabled: false
+
+networkPolicy:
+  enabled: false
+
+rateLimit:
+  enabled: false

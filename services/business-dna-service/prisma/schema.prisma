@@ -1,0 +1,470 @@
+// Lateen OS — Business DNA Service Prisma Schema
+// System of Record for Layer 1 aggregates
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Organization (tenant root)
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id                    String   @id @default(uuid())
+  code                  String   @unique
+  name                  String
+  legalName             String
+  registrationNumber    String
+  taxId                 String
+  status                String
+  defaultCurrency       String
+  defaultLocale         String
+  timezone              String
+  foundedAt             DateTime? @db.Date
+  operatingModel        String
+  proactiveAiEnabled    Boolean  @default(true)
+  aiCouncilPolicyId     String?
+  defaultAiSupervisorId   String?
+  aiDecisionThreshold   String?
+  registeredAgentCount  Int?
+  industryVerticals     Json     @default("[]")
+  productionModel       String
+  serviceCoverage       String
+  defaultPaymentTerms   String?
+  defaultSlaTier        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  branches     Branch[]
+  departments  Department[]
+  employees    Employee[]
+  roles        Role[]
+  permissions  Permission[]
+  customers    Customer[]
+  suppliers    Supplier[]
+  products     Product[]
+  services     Service[]
+  machines     Machine[]
+  projects     Project[]
+  quotations   Quotation[]
+  orders       Order[]
+  invoices     Invoice[]
+  workflows    Workflow[]
+  policies     Policy[]
+  kpis         Kpi[]
+  assets       Asset[]
+  agents       Agent[]
+}
+
+// ---------------------------------------------------------------------------
+// Tenant-scoped aggregates
+// ---------------------------------------------------------------------------
+
+model Branch {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  address        Json?
+  phone          String?
+  email          String?
+  currency       String?
+  timezone       String?
+  managerId      String?
+  openedAt       DateTime? @db.Date
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Department {
+  id                 String   @id @default(uuid())
+  organizationId     String
+  branchId           String?
+  parentDepartmentId String?
+  code               String
+  name               String
+  description        String?
+  status             String
+  headId             String?
+  costCenter         String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Employee {
+  id             String    @id @default(uuid())
+  organizationId String
+  branchId       String?
+  departmentId   String?
+  employeeNumber String
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  jobTitle       String?
+  employmentType String
+  status         String
+  managerId      String?
+  hiredAt        DateTime? @db.Date
+  terminatedAt   DateTime? @db.Date
+  identityId     String?
+  roleIds        Json      @default("[]")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, employeeNumber])
+  @@unique([organizationId, email])
+  @@index([organizationId])
+}
+
+model Role {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  type           String
+  status         String
+  parentRoleId   String?
+  departmentId   String?
+  permissionIds  Json     @default("[]")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, type])
+  @@index([organizationId, status])
+}
+
+model Permission {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  description    String?
+  resource       String
+  action         String
+  scope          String
+  status         String
+  policyId       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, resource])
+  @@index([organizationId, action])
+  @@index([organizationId, status])
+}
+
+model Customer {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  segment        String
+  currency       String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, segment])
+}
+
+model Supplier {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  status         String
+  category       String
+  currency       String
+  unitOfMeasure  String
+  productionType String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, category])
+  @@index([organizationId, status])
+}
+
+model Service {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  pricingModel   String
+  currency       String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Machine {
+  id             String   @id @default(uuid())
+  organizationId String
+  branchId       String
+  code           String
+  name           String
+  status         String
+  ownerDepartmentId String
+  category       String
+  type           String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, branchId])
+  @@index([organizationId, status])
+}
+
+model Project {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  status         String
+  projectType    String
+  deliveryModel  String
+  ownerId        String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, projectType])
+}
+
+model Quotation {
+  id             String   @id @default(uuid())
+  organizationId String
+  number         String
+  customerId     String
+  status         String
+  currency       String
+  subtotal       String
+  discount       String?
+  tax            String?
+  total          String
+  lineItems      Json     @default("[]")
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, customerId])
+  @@index([organizationId, status])
+}
+
+model Order {
+  id             String   @id @default(uuid())
+  organizationId String
+  number         String
+  customerId     String
+  status         String
+  currency       String
+  subtotal       String
+  discount       String?
+  tax            String?
+  total          String
+  lineItems      Json     @default("[]")
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, customerId])
+  @@index([organizationId, status])
+}
+
+model Invoice {
+  id             String   @id @default(uuid())
+  organizationId String
+  number         String
+  type           String
+  status         String
+  currency       String
+  subtotal       String
+  discount       String?
+  tax            String?
+  total          String
+  amountDue      String
+  lineItems      Json     @default("[]")
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, status])
+}
+
+model Workflow {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  version        Int      @default(1)
+  stages         Json     @default("[]")
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code, version])
+  @@index([organizationId])
+}
+
+model Policy {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, type])
+}
+
+model Kpi {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  unit           String
+  direction      String
+  frequency      String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Asset {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  type           String
+  status         String
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+}
+
+model Agent {
+  id             String   @id @default(uuid())
+  organizationId String
+  code           String
+  name           String
+  workforceType  String
+  status         String
+  proactiveEnabled Boolean @default(true)
+  reactiveEnabled  Boolean @default(true)
+  data           Json     @default("{}")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, workforceType])
+}

@@ -1,0 +1,7 @@
+{
+  "id": "admin-gateway",
+  "name": "Admin Gateway",
+  "version": "0.0.0",
+  "type": "application",
+  "description": "Enterprise API Gateway administration console"
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@lateen-os/business-dna",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Business DNA Engine — canonical domain model for Lateen OS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@lateen-os/shared-kernel": "workspace:*"
+  }
+}

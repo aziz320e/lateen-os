@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/identity-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model OrganizationIdentity {
+  id             String   @id @default(uuid())
+  organizationId String   @unique @map("organization_id")
+  name           String
+  status         String   @default("active")
+  settings       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  users            User[]
+  serviceAccounts  ServiceAccount[]
+  apiKeys          ApiKey[]
+
+  @@map("organization_identities")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  organization   OrganizationIdentity @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  username       String
+  passwordHash   String?  @map("password_hash")
+  displayName    String?  @map("display_name")
+  status         String   @default("active")
+  roles          Json     @default("[]")
+  permissions    Json     @default("[]")
+  failedAttempts Int      @default(0) @map("failed_attempts")
+  lockedUntil    DateTime? @map("locked_until")
+  lastLoginAt    DateTime? @map("last_login_at")
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sessions      Session[]
+  refreshTokens RefreshToken[]
+  devices       Device[]
+
+  @@unique([organizationId, email])
+  @@unique([organizationId, username])
+  @@index([organizationId])
+  @@map("users")
+}
+
+model ServiceAccount {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  organization   OrganizationIdentity @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  clientId       String   @unique @map("client_id")
+  clientSecretHash String @map("client_secret_hash")
+  roles          Json     @default("[]")
+  permissions    Json     @default("[]")
+  status         String   @default("active")
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@map("service_accounts")
+}
+
+model ApiKey {
+  id             String    @id @default(uuid())
+  organizationId String    @map("organization_id")
+  organization   OrganizationIdentity @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  keyPrefix      String    @map("key_prefix")
+  keyHash        String    @map("key_hash")
+  roles          Json      @default("[]")
+  permissions    Json      @default("[]")
+  status         String    @default("active")
+  expiresAt      DateTime? @map("expires_at")
+  lastUsedAt     DateTime? @map("last_used_at")
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([keyPrefix])
+  @@map("api_keys")
+}
+
+model Session {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String    @map("organization_id")
+  tokenHash      String    @unique @map("token_hash")
+  ipAddress      String?   @map("ip_address")
+  userAgent      String?   @map("user_agent")
+  rememberMe     Boolean   @default(false) @map("remember_me")
+  expiresAt      DateTime  @map("expires_at")
+  revokedAt      DateTime? @map("revoked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId      String    @map("session_id")
+  session        Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  organizationId String    @map("organization_id")
+  tokenHash      String    @unique @map("token_hash")
+  expiresAt      DateTime  @map("expires_at")
+  revokedAt      DateTime? @map("revoked_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([sessionId])
+  @@map("refresh_tokens")
+}
+
+model Device {
+  id             String    @id @default(uuid())
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String    @map("organization_id")
+  deviceId       String    @map("device_id")
+  name           String?
+  platform       String?
+  trusted        Boolean   @default(false)
+  lastSeenAt     DateTime? @map("last_seen_at")
+  metadata       Json      @default("{}")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([userId, deviceId])
+  @@index([organizationId])
+  @@map("devices")
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String?  @map("organization_id")
+  actorSubject   String   @map("actor_subject")
+  action         String
+  resource       String
+  resourceId     String?  @map("resource_id")
+  ipAddress      String?  @map("ip_address")
+  userAgent      String?  @map("user_agent")
+  outcome        String   @default("success")
+  metadata       Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([actorSubject])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model PermissionGrant {
+  id             String   @id @default(uuid())
+  organizationId String   @map("organization_id")
+  subject        String
+  subjectType    String   @map("subject_type")
+  permission     String
+  grantedBy      String   @map("granted_by")
+  revokedAt      DateTime? @map("revoked_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, subject])
+  @@map("permission_grants")
+}

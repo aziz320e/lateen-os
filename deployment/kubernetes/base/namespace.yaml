@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lateen-os
+  labels:
+    app.kubernetes.io/part-of: lateen-os
+    pod-security.kubernetes.io/enforce: restricted

@@ -1,0 +1,36 @@
+{
+  "name": "@lateen-os/multi-agent",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Multi-Agent Collaboration Engine — coordination layer above AI Workforce for Lateen OS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@lateen-os/ai-runtime": "workspace:*",
+    "@lateen-os/ai-workforce": "workspace:*",
+    "@lateen-os/business-dna": "workspace:*",
+    "@lateen-os/decision-engine": "workspace:*",
+    "@lateen-os/institutional-memory": "workspace:*",
+    "@lateen-os/shared-kernel": "workspace:*",
+    "@lateen-os/workflow-engine": "workspace:*"
+  }
+}

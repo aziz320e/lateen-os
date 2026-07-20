@@ -1,0 +1,83 @@
+{{- range $name, $app := .Values.frontends }}
+{{- if $app.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" $ | nindent 4 }}
+    lateen.io/component: {{ $name }}
+    lateen.io/tier: frontend
+spec:
+  ports:
+    - port: {{ $app.port }}
+      targetPort: {{ $app.port }}
+      name: http
+  selector:
+    lateen.io/component: {{ $name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" $ | nindent 4 }}
+    lateen.io/component: {{ $name }}
+    lateen.io/tier: frontend
+spec:
+  replicas: {{ $app.replicas | default 1 }}
+  selector:
+    matchLabels:
+      lateen.io/component: {{ $name }}
+  template:
+    metadata:
+      labels:
+        lateen.io/component: {{ $name }}
+        lateen.io/tier: frontend
+        {{- include "lateen.selectorLabels" $ | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "lateen.serviceAccountName" $ }}
+      securityContext:
+        runAsNonRoot: {{ $.Values.global.podSecurity.runAsNonRoot }}
+        runAsUser: {{ $.Values.global.podSecurity.runAsUser }}
+        fsGroup: {{ $.Values.global.podSecurity.fsGroup }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "lateen.image" (dict "name" $name "root" $) }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $app.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "lateen.fullname" $ }}-platform
+          env:
+            - name: PORT
+              value: "{{ $app.port }}"
+            - name: NODE_ENV
+              value: production
+            - name: HOSTNAME
+              value: "0.0.0.0"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ $app.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ $app.port }}
+            initialDelaySeconds: 15
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+{{- end }}
+{{- end }}

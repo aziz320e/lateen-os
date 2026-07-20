@@ -1,0 +1,61 @@
+# syntax=docker/dockerfile:1.7
+# Multi-stage frontend image for Lateen OS Next.js apps
+#
+# Build example:
+#   docker build -f deployment/docker/Dockerfile.frontend \
+#     --build-arg APP_PACKAGE=@lateen-os/ceo-cockpit \
+#     --build-arg APP_PATH=apps/ceo-cockpit \
+#     --build-arg APP_PORT=3002 \
+#     -t lateen-os/ceo-cockpit:latest .
+
+ARG NODE_VERSION=20-alpine
+
+FROM node:${NODE_VERSION} AS base
+RUN apk add --no-cache libc6-compat wget \
+  && corepack enable \
+  && corepack prepare pnpm@9.15.9 --activate
+WORKDIR /repo
+
+FROM base AS pruner
+ARG APP_PATH
+COPY . .
+RUN pnpm dlx turbo prune --docker --filter=./${APP_PATH}
+
+FROM base AS deps
+COPY --from=pruner /repo/out/json/ .
+COPY --from=pruner /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
+RUN pnpm install --frozen-lockfile
+
+FROM base AS builder
+ARG APP_PACKAGE
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=pruner /repo/out/json/ .
+COPY --from=pruner /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=pruner /repo/out/full/ .
+RUN pnpm --filter ${APP_PACKAGE} build
+
+FROM node:${NODE_VERSION} AS runner
+RUN apk add --no-cache libc6-compat wget \
+  && addgroup -g 10001 -S lateen \
+  && adduser -u 10001 -S lateen -G lateen
+WORKDIR /repo
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+ARG APP_PATH
+ARG APP_PORT=3000
+ENV APP_PATH=${APP_PATH}
+ENV PORT=${APP_PORT}
+ENV HOSTNAME=0.0.0.0
+
+COPY --from=builder --chown=lateen:lateen /repo/ ./
+
+USER lateen
+WORKDIR /repo/${APP_PATH}
+EXPOSE ${APP_PORT}
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:${PORT}/ || exit 1
+
+CMD ["sh", "-c", "node ../../node_modules/next/dist/bin/next start -p ${PORT}"]

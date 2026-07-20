@@ -1,0 +1,7 @@
+{
+  "id": "search-center",
+  "name": "Search Center",
+  "version": "0.0.0",
+  "type": "application",
+  "description": "Enterprise search UI for Lateen OS"
+}

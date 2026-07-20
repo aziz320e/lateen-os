@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lateen-os-platform
+  namespace: lateen-os
+data:
+  LATEEN_ENVIRONMENT: development
+  LATEEN_NATS_URL: "nats://nats:4222"
+  LATEEN_OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4318"
+  LATEEN_BUSINESS_DNA_BASE_URL: "http://business-dna-service:4001"
+  LATEEN_PRODUCT_DISCOVERY_BASE_URL: "http://product-discovery:4002"
+  LATEEN_IDENTITY_BASE_URL: "http://identity-service:4003"
+  LATEEN_INTEGRATION_HUB_BASE_URL: "http://integration-hub:4004"
+  LATEEN_MISSION_SCHEDULER_BASE_URL: "http://mission-scheduler:4005"
+  LATEEN_LOG_FORMAT: json
+  CORRELATION_ID_HEADER: x-correlation-id

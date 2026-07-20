@@ -1,0 +1,61 @@
+{
+  "id": "printing-industry",
+  "name": "printing-industry",
+  "displayName": "Printing Industry Pack",
+  "version": "1.0.0",
+  "author": "Lateen OS",
+  "license": "MIT",
+  "description": "Official industry pack for printing, signage, and visual communication businesses",
+  "category": "industry",
+  "type": "industry-pack",
+  "industry": "printing",
+  "engineVersion": "1.0.0",
+  "sdkVersion": "1.0.0",
+  "permissions": [
+    "business-dna:read",
+    "business-dna:write",
+    "workflow:read",
+    "workflow:write",
+    "mission:read",
+    "mission:write",
+    "ai-worker:read",
+    "analytics:read",
+    "events:publish"
+  ],
+  "dependencies": [],
+  "workflows": [
+    "printing-quotation",
+    "printing-design-approval",
+    "printing-production",
+    "printing-quality-inspection",
+    "printing-packing",
+    "printing-delivery",
+    "printing-installation",
+    "printing-warranty"
+  ],
+  "missions": [
+    "launch-printing-product",
+    "optimize-production",
+    "replace-machine",
+    "reduce-waste",
+    "increase-margin",
+    "customer-follow-up"
+  ],
+  "workers": [
+    "printing-planner",
+    "production-planner",
+    "machine-scheduler",
+    "quality-inspector",
+    "installation-coordinator",
+    "cost-optimizer"
+  ],
+  "widgets": [
+    "printing-production-dashboard",
+    "printing-sales-dashboard",
+    "printing-machines-dashboard",
+    "printing-warehouse-dashboard",
+    "printing-finance-dashboard",
+    "printing-ceo-dashboard"
+  ],
+  "main": "dist/index.js"
+}

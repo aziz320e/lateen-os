@@ -1,0 +1,39 @@
+{
+  "name": "@lateen-os/setup-wizard",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Setup Wizard — enterprise provisioning UI for Lateen OS",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "next dev --port 3006",
+    "build": "next build",
+    "start": "next start --port 3006",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "lint": "next lint",
+    "clean": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.1.2",
+    "@tanstack/react-query": "^5.66.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.474.0",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,101 @@
+{{- range $name, $svc := .Values.backends }}
+{{- if $svc.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" $ | nindent 4 }}
+    lateen.io/component: {{ $name }}
+    lateen.io/tier: backend
+spec:
+  ports:
+    - port: {{ $svc.port }}
+      targetPort: {{ $svc.port }}
+      name: http
+  selector:
+    lateen.io/component: {{ $name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "lateen.labels" $ | nindent 4 }}
+    lateen.io/component: {{ $name }}
+    lateen.io/tier: backend
+spec:
+  replicas: {{ $svc.replicas | default 1 }}
+  selector:
+    matchLabels:
+      lateen.io/component: {{ $name }}
+  template:
+    metadata:
+      labels:
+        lateen.io/component: {{ $name }}
+        lateen.io/tier: backend
+        {{- include "lateen.selectorLabels" $ | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ $svc.port }}"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ include "lateen.serviceAccountName" $ }}
+      securityContext:
+        runAsNonRoot: {{ $.Values.global.podSecurity.runAsNonRoot }}
+        runAsUser: {{ $.Values.global.podSecurity.runAsUser }}
+        fsGroup: {{ $.Values.global.podSecurity.fsGroup }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "lateen.image" (dict "name" $name "root" $) }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $svc.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "lateen.fullname" $ }}-platform
+          env:
+            - name: PORT
+              value: "{{ $svc.port }}"
+            - name: NODE_ENV
+              value: production
+            - name: DATABASE_URL
+              value: {{ printf "postgresql://lateen:%s@postgres:5432/%s" $.Values.secrets.postgresPassword $svc.database | quote }}
+            - name: REDIS_URL
+              value: {{ printf "redis://:%s@redis:6379/%d" $.Values.secrets.redisPassword ($svc.redisDb | default 0) | quote }}
+            - name: LATEEN_POSTGRES_USER
+              value: lateen
+            - name: LATEEN_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lateen.fullname" $ }}-secrets
+                  key: LATEEN_POSTGRES_PASSWORD
+            - name: LATEEN_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lateen.fullname" $ }}-secrets
+                  key: LATEEN_REDIS_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lateen.fullname" $ }}-secrets
+                  key: LATEEN_JWT_SECRET
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ $svc.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ $svc.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml ($svc.resources | default (dict "requests" (dict "cpu" "100m" "memory" "256Mi") "limits" (dict "cpu" "500m" "memory" "512Mi"))) | nindent 12 }}
+{{- end }}
+{{- end }}

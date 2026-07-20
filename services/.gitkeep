@@ -1,0 +1,5 @@
+# Backend services
+
+Add API, worker, and background services here.
+
+Each service should be a workspace package with its own `package.json`.

@@ -1,0 +1,40 @@
+import { describe, expect, it } from 'vitest';
+import { provider, connectorManifest } from '../src/index.js';
+
+describe('WooCommerce Provider', () => {
+  it('exports connector manifest', () => {
+    expect(connectorManifest.provider).toBe('woocommerce');
+    expect(connectorManifest.id).toBe('woocommerce-connector');
+  });
+
+  it('testConnection returns ok with credentials', async () => {
+    const settings = Object.fromEntries(["siteUrl","consumerKey","consumerSecret"].map((k) => [k, 'test-value']));
+    const result = await provider.testConnection({ settings });
+    expect(result.ok).toBe(true);
+  });
+
+  it('authenticate stores credentials ref', async () => {
+    const settings = Object.fromEntries(["siteUrl","consumerKey","consumerSecret"].map((k) => [k, 'test-value']));
+    const result = await provider.authenticate({ settings });
+    expect(result.ok).toBe(true);
+    expect(result.credentialsRef).toBeDefined();
+  });
+
+  it('sync pull returns records', async () => {
+    const settings = Object.fromEntries(["siteUrl","consumerKey","consumerSecret"].map((k) => [k, 'test-value']));
+    const result = await provider.sync.pull({ settings }, 'orders');
+    expect(result.count).toBeGreaterThan(0);
+  });
+
+  it('webhook register returns registration', async () => {
+    const settings = Object.fromEntries(["siteUrl","consumerKey","consumerSecret"].map((k) => [k, 'test-value']));
+    const reg = await provider.webhook.register({ settings, webhookUrl: 'https://example.com/hook' }, ['connected']);
+    expect(reg.webhookId).toBeDefined();
+  });
+
+  it('health check reports status', async () => {
+    const settings = Object.fromEntries(["siteUrl","consumerKey","consumerSecret"].map((k) => [k, 'test-value']));
+    const health = await provider.health.check({ settings });
+    expect(['healthy', 'degraded', 'down']).toContain(health.status);
+  });
+});

@@ -1,0 +1,7 @@
+global:
+  environment: staging
+  imageTag: staging
+
+secrets:
+  externalSecrets:
+    enabled: true

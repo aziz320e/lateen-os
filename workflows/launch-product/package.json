@@ -1,0 +1,44 @@
+{
+  "name": "@lateen-os/launch-product-mission",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Launch Product — first executable multi-agent business mission for Lateen OS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@lateen-os/ai-runtime": "workspace:*",
+    "@lateen-os/ai-workforce": "workspace:*",
+    "@lateen-os/business-dna": "workspace:*",
+    "@lateen-os/decision-engine": "workspace:*",
+    "@lateen-os/institutional-memory": "workspace:*",
+    "@lateen-os/multi-agent": "workspace:*",
+    "@lateen-os/workflow-engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "@types/node": "^22.10.7",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}

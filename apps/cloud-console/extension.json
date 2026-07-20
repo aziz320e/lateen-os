@@ -1,0 +1,7 @@
+{
+  "id": "cloud-console",
+  "name": "Cloud Console",
+  "version": "0.0.0",
+  "type": "application",
+  "description": "SaaS control plane UI for Lateen OS"
+}
