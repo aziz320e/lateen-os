@@ -86,6 +86,10 @@ export {
 } from './routing/strategies.js';
 
 export type { EmbeddingProvider } from './embedding/provider.js';
+export {
+  createOpenAiCompatibleEmbeddingProvider,
+  type OpenAiCompatibleEmbeddingConfig,
+} from './embedding/openai-compatible-embedding-adapter.js';
 export type { VisionProvider } from './vision/provider.js';
 export type { SpeechProvider } from './speech/provider.js';
 export type { ImageProvider } from './image/provider.js';
@@ -96,9 +100,14 @@ export type {
   StreamEvent,
   StreamingChatProvider,
 } from './streaming/types.js';
+export {
+  createOpenAiCompatibleChatProvider,
+  type OpenAiCompatibleChatConfig,
+} from './streaming/openai-compatible-adapter.js';
 
 export type { ToolDefinition, ToolCall, ToolResult } from './tool-calling/types.js';
-export type { StructuredOutputResult } from './structured-output/types.js';
+export type { StructuredOutputResult, StructuredOutputProvider } from './structured-output/types.js';
+export { createStructuredOutputProvider } from './structured-output/structured-output.impl.js';
 
 export type {
   FallbackTrigger,
