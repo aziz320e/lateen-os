@@ -4,6 +4,11 @@
  * Canonical decision layer for Lateen OS. No AI agent may make business
  * decisions directly — all recommendations pass through this engine.
  *
+ * Real in-memory repositories and reasoning implementations (see
+ * createReasoner, createConflictResolver, createContextResolver,
+ * createDecisionResolver, createDecisionQueries). Deliberately
+ * deterministic and rule-based, never LLM-driven.
+ *
  * @packageDocumentation
  */
 
@@ -63,30 +68,56 @@ export type {
   Reasoner,
   ReasoningInput,
 } from './reasoning/reasoner.js';
+export { createReasoner } from './reasoning/reasoner.impl.js';
 export type {
   DecisionResolver,
   DecisionResolution,
 } from './reasoning/decision-resolver.js';
+export { createDecisionResolver } from './reasoning/decision-resolver.impl.js';
 export type {
   ConflictResolver,
   DecisionConflict,
   ConflictResolution,
 } from './reasoning/conflict-resolver.js';
+export { createConflictResolver } from './reasoning/conflict-resolver.impl.js';
 export type {
   ContextResolver,
   DecisionContextResolveOptions,
 } from './reasoning/context-resolver.js';
+export {
+  createContextResolver,
+  type ContextResolverDeps,
+} from './reasoning/context-resolver.impl.js';
 
 export type { DecisionQueries } from './queries/decision-queries.js';
+export {
+  createDecisionQueries,
+  type DecisionQueriesDeps,
+} from './queries/decision-queries.impl.js';
 export type { DecisionId, OrganizationId } from './shared/identifiers.js';
 
 export type { DecisionRepository } from './decision/repository.js';
+export { createDecisionRepository } from './decision/repository.impl.js';
 export type { DecisionContextRepository } from './context/repository.js';
+export { createDecisionContextRepository } from './context/repository.impl.js';
 export type { EvaluationResultRepository } from './evaluation/repository.js';
+export { createEvaluationResultRepository } from './evaluation/repository.impl.js';
 export type { DecisionPolicyRepository } from './policy/repository.js';
+export { createDecisionPolicyRepository } from './policy/repository.impl.js';
+export {
+  evaluatePolicyConstraints,
+  evaluateExpression,
+  type PolicyEvaluationOutcome,
+} from './policy/policy-evaluator.js';
 export type { DecisionRuleRepository } from './rule/repository.js';
+export { createDecisionRuleRepository } from './rule/repository.impl.js';
 export type { RecommendationRepository } from './recommendation/repository.js';
+export { createRecommendationRepository } from './recommendation/repository.impl.js';
 export type { ApprovalFlowRepository } from './approval/repository.js';
+export { createApprovalFlowRepository } from './approval/repository.impl.js';
 export type { RiskAssessmentRepository } from './risk/repository.js';
+export { createRiskAssessmentRepository } from './risk/repository.impl.js';
 export type { PriorityScoreRepository } from './priority/repository.js';
+export { createPriorityScoreRepository } from './priority/repository.impl.js';
 export type { DecisionExecutionPlanRepository } from './execution/repository.js';
+export { createDecisionExecutionPlanRepository } from './execution/repository.impl.js';
