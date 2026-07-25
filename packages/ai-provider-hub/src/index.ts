@@ -4,7 +4,10 @@
  * Canonical LLM provider abstraction for Lateen OS. AI Brain MUST consume this hub.
  * Applications MUST NEVER call providers directly.
  *
- * Contracts only — no provider SDK implementations.
+ * Real in-memory registries, cache, telemetry, policy enforcement, health
+ * checking, and query layer (see `createAiProviderHub`). `chat`/`embedding`
+ * providers are real OpenAI-compatible HTTP adapters (see `streaming/` and
+ * `embedding/`); `vision`/`speech`/`image` remain bring-your-own.
  *
  * @packageDocumentation
  */
@@ -30,6 +33,8 @@ export * as queries from './queries/index.js';
 export * as events from './events/index.js';
 
 export type { AiProviderHub, ProviderHubCapabilities } from './hub.js';
+export type { CreateAiProviderHubConfig } from './hub.impl.js';
+export { createAiProviderHub } from './hub.impl.js';
 
 export type {
   ProviderKind,
@@ -41,7 +46,13 @@ export type {
 
 export { PROVIDER_CATALOG, SUPPORTED_PROVIDER_KINDS } from './provider/catalog.js';
 export type { ProviderRegistry } from './provider/registry.js';
+export { createProviderRegistry } from './provider/registry.impl.js';
 export type { ProviderHealth } from './provider/health.js';
+export {
+  createProviderHealth,
+  type ProviderHealthCheckFn,
+  type ProviderHealthCheckResult,
+} from './provider/health.impl.js';
 
 export type {
   ModelMetadata,
@@ -53,6 +64,7 @@ export type {
 
 export { MODEL_CATALOG, getModelsByProvider, getModelsByCapability } from './model/catalog.js';
 export type { ModelRegistry } from './model/registry.js';
+export { createModelRegistry } from './model/registry.impl.js';
 
 export type {
   RoutingStrategy,
@@ -63,6 +75,7 @@ export type {
 } from './routing/types.js';
 
 export type { ProviderSelector } from './routing/selector.js';
+export { createProviderSelector } from './routing/selector.impl.js';
 export {
   selectCheapest,
   selectFastest,
@@ -95,6 +108,7 @@ export type {
 } from './fallback/types.js';
 
 export type { CachePolicy, ProviderCache } from './cache/types.js';
+export { createInMemoryProviderCache } from './cache/cache.impl.js';
 
 export type {
   TokenUsage,
@@ -102,6 +116,7 @@ export type {
   ProviderTelemetry,
   TelemetrySpanAttributes,
 } from './telemetry/types.js';
+export { createProviderTelemetry } from './telemetry/telemetry.impl.js';
 
 export type { CostBreakdown, TokenCostInput, BudgetQuota } from './cost/types.js';
 export type { CostCalculator } from './cost/calculator.js';
@@ -109,8 +124,10 @@ export { calculateTokenCost, defaultCostCalculator } from './cost/calculator.js'
 
 export type { ProviderPolicy, PolicyEvaluation, PolicyEnforcer } from './policy/types.js';
 export { providerPolicySchema } from './policy/types.js';
+export { createPolicyEnforcer } from './policy/policy.impl.js';
 
 export type { ProviderQueries } from './queries/provider-queries.js';
+export { createProviderQueries, type ProviderQueriesDeps } from './queries/provider-queries.impl.js';
 
 export type { ProviderHubEvent, ProviderSelected, RequestCompleted } from './events/provider-events.js';
 export { PROVIDER_EVENT_NAMES } from './events/provider-events.js';
