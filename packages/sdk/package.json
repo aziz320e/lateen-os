@@ -41,7 +41,6 @@
     "@lateen-os/ai-runtime": "workspace:*",
     "@lateen-os/ai-workforce": "workspace:*",
     "@lateen-os/business-dna": "workspace:*",
-    "@lateen-os/kernel": "workspace:*",
     "@lateen-os/multi-agent": "workspace:*",
     "@lateen-os/shared-kernel": "workspace:*",
     "@lateen-os/workflow-engine": "workspace:*",
