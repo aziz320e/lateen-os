@@ -13,6 +13,9 @@ export * as common from './common/index.js';
 export * as audit from './audit/index.js';
 export * as tenant from './tenant/index.js';
 export * as time from './time/index.js';
+export * as observability from './observability/index.js';
+export * as events from './events/index.js';
+export * as repository from './repository/index.js';
 
 export type { Entity } from './core/entity.js';
 export type { AggregateRoot } from './core/aggregate-root.js';
@@ -56,3 +59,19 @@ export type { AuditInfo, VersionInfo } from './audit/index.js';
 export type { TenantId, OrganizationId, BranchId } from './tenant/index.js';
 
 export type { Timestamp, DateOnly, Clock } from './time/index.js';
+
+export type { Logger, LogLevel, CreateLoggerOptions } from './observability/logger.js';
+export { createLogger } from './observability/logger.js';
+export type { RetryOptions } from './observability/retry.js';
+export { withRetry } from './observability/retry.js';
+export { withSpan } from './observability/span.js';
+
+export type { EventBus, EventHandler, EventMeta, WildcardEventHandler } from './events/event-bus.js';
+export { createEventBus } from './events/event-bus.js';
+
+export type {
+  IdentifiedEntity,
+  InMemoryRepository,
+  InMemoryRepositoryOptions,
+} from './repository/in-memory-repository.js';
+export { createInMemoryRepository } from './repository/in-memory-repository.js';

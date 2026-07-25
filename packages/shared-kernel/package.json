@@ -35,17 +35,37 @@
     "./time": {
       "types": "./dist/time/index.d.ts",
       "import": "./dist/time/index.js"
+    },
+    "./observability": {
+      "types": "./dist/observability/index.d.ts",
+      "import": "./dist/observability/index.js"
+    },
+    "./events": {
+      "types": "./dist/events/index.d.ts",
+      "import": "./dist/events/index.js"
+    },
+    "./repository": {
+      "types": "./dist/repository/index.d.ts",
+      "import": "./dist/repository/index.js"
     }
   },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "lint": "node -e \"process.exit(0)\""
   },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "pino": "^9.6.0"
+  },
   "devDependencies": {
     "@lateen-os/typescript-config": "workspace:*",
-    "typescript": "^5.8.3"
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
   }
 }
