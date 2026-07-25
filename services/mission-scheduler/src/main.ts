@@ -30,7 +30,7 @@ async function bootstrap() {
   const config = loadConfig();
   const telemetry = initTelemetry(config.OTEL_SERVICE_NAME, config.OTEL_EXPORTER_OTLP_ENDPOINT);
 
-  const prisma = getPrismaClient();
+  const prisma = getPrismaClient(config.DATABASE_URL);
   const repo = createRepositories(prisma);
   const queue = createMissionQueue(config.USE_REDIS && config.NODE_ENV !== 'test', config.REDIS_URL);
   const cron = new CronEvaluator();

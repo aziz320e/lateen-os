@@ -36,7 +36,7 @@ async function main() {
   const config = loadConfig();
   const telemetry = initTelemetry(config.OTEL_SERVICE_NAME, config.OTEL_EXPORTER_OTLP_ENDPOINT);
 
-  const prisma = getPrismaClient();
+  const prisma = getPrismaClient(config.DATABASE_URL);
   const repositories = createRepositories(prisma);
   const cache = createCacheStore(
     config.REDIS_URL,
@@ -51,7 +51,11 @@ async function main() {
   let eventsPublisher: NatsDiscoveryEventPublisher | NoOpDiscoveryEventPublisher =
     new NoOpDiscoveryEventPublisher();
   if (config.USE_NATS) {
-    eventsPublisher = await createEventPublisher(config.NATS_URL, config.NATS_SUBJECT_PREFIX);
+    try {
+      eventsPublisher = await createEventPublisher(config.NATS_URL, config.NATS_SUBJECT_PREFIX);
+    } catch (error) {
+      console.error('Failed to connect to NATS; falling back to no-op event publisher', error);
+    }
   }
 
   const decisionEngine = createDecisionEngineAdapter(cache, eventsPublisher);
@@ -73,7 +77,11 @@ async function main() {
 
   let natsIntegration: NatsIntegration | undefined;
   if (config.USE_NATS) {
-    natsIntegration = await startNatsIntegration(config.NATS_URL, cache);
+    try {
+      natsIntegration = await startNatsIntegration(config.NATS_URL, cache);
+    } catch (error) {
+      console.error('Failed to start NATS integration; cache invalidation subscriptions disabled', error);
+    }
   }
 
   const workflow = createProductDiscoveryWorkflow({

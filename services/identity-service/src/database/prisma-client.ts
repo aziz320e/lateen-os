@@ -2,9 +2,11 @@ import { PrismaClient } from '@prisma/identity-client';
 
 let prisma: PrismaClient | undefined;
 
-export function getPrismaClient(): PrismaClient {
+export function getPrismaClient(databaseUrl?: string): PrismaClient {
   if (!prisma) {
-    prisma = new PrismaClient();
+    prisma = new PrismaClient(
+      databaseUrl ? { datasources: { db: { url: databaseUrl } } } : undefined,
+    );
   }
   return prisma;
 }

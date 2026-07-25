@@ -16,11 +16,23 @@ async function probe(url: string): Promise<'ok' | 'down'> {
   }
 }
 
+async function probeCache(cache: CacheStore): Promise<'ok' | 'down'> {
+  try {
+    await Promise.race([
+      cache.set('platform:health:probe', { ts: Date.now() }, 10),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('cache probe timeout')), 2000)),
+    ]);
+    return 'ok';
+  } catch {
+    return 'down';
+  }
+}
+
 export function registerPlatformRoutes(app: FastifyInstance, deps: PlatformHealthDeps) {
   app.get('/platform/health', async () => {
     const [businessDna, redis] = await Promise.all([
       probe(`${deps.config.BUSINESS_DNA_BASE_URL}/health`),
-      deps.cache.set('platform:health:probe', { ts: Date.now() }, 10).then(() => 'ok' as const).catch(() => 'down' as const),
+      probeCache(deps.cache),
     ]);
 
     const services = [
