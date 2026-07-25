@@ -102,19 +102,56 @@ export type {
 } from './opportunities/types.js';
 
 export type { IntelligenceQueries } from './queries/intelligence-queries.js';
+export {
+  createIntelligenceQueries,
+  type IntelligenceQueriesDeps,
+} from './queries/intelligence-queries.impl.js';
 export type { OrganizationId } from './shared/identifiers.js';
 
 export type { TrendRepository } from './trend-discovery/repository.js';
+export { createTrendRepository } from './trend-discovery/repository.impl.js';
 export type { MarketRepository } from './market-research/repository.js';
+export { createMarketRepository } from './market-research/repository.impl.js';
 export type { CompetitorRepository } from './competitor-intelligence/repository.js';
+export { createCompetitorRepository } from './competitor-intelligence/repository.impl.js';
 export type { ProductOpportunityRepository } from './product-discovery/repository.js';
+export { createProductOpportunityRepository } from './product-discovery/repository.impl.js';
 export type { MachineOpportunityRepository } from './machine-discovery/repository.js';
+export { createMachineOpportunityRepository } from './machine-discovery/repository.impl.js';
 export type { PriceAnalysisRepository } from './pricing-intelligence/repository.js';
+export { createPriceAnalysisRepository } from './pricing-intelligence/repository.impl.js';
 export type { CustomerInsightRepository } from './customer-insights/repository.js';
+export { createCustomerInsightRepository } from './customer-insights/repository.impl.js';
 export type { KnowledgeFindingRepository } from './knowledge-mining/repository.js';
+export { createKnowledgeFindingRepository } from './knowledge-mining/repository.impl.js';
 export type { ForecastRepository } from './forecasting/repository.js';
+export { createForecastRepository } from './forecasting/repository.impl.js';
+export {
+  createForecaster,
+  type Forecaster,
+  type ForecastInput,
+  type HistoricalPoint,
+} from './forecasting/forecaster.impl.js';
 export type { RecommendationCandidateRepository } from './recommendation-engine/repository.js';
+export { createRecommendationCandidateRepository } from './recommendation-engine/repository.impl.js';
+export {
+  createRecommender,
+  type Recommender,
+  type CreateCandidateInput,
+} from './recommendation-engine/recommender.impl.js';
 export type { IntelligenceScoreRepository } from './scoring/repository.js';
+export { createIntelligenceScoreRepository } from './scoring/repository.impl.js';
+export {
+  createScorer,
+  computeCompositeScore,
+  type Scorer,
+  type ScoringInput,
+  type ScoringWeights,
+} from './scoring/scorer.impl.js';
 export type { RankingResultRepository } from './ranking/repository.js';
+export { createRankingResultRepository } from './ranking/repository.impl.js';
+export { createRanker, type Ranker, type RankableItem } from './ranking/ranker.impl.js';
 export type { SignalRepository } from './signals/repository.js';
+export { createSignalRepository } from './signals/repository.impl.js';
 export type { BusinessOpportunityRepository } from './opportunities/repository.js';
+export { createBusinessOpportunityRepository } from './opportunities/repository.impl.js';
