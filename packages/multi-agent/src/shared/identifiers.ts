@@ -41,3 +41,11 @@ export type SharedMemoryReferenceId = Identifier;
 export type SharedDecisionReferenceId = Identifier;
 export type MissionExecutionId = Identifier;
 export type ExecutionStageId = Identifier;
+
+/** Agent registry / directory / groups / sessions / working memory / conflicts / policies. */
+export type AgentRegistrationId = Identifier;
+export type AgentGroupId = Identifier;
+export type AgentSessionId = Identifier;
+export type SharedWorkingMemoryEntryId = Identifier;
+export type ConflictId = Identifier;
+export type CoordinationPolicyId = Identifier;

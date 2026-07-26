@@ -38,6 +38,8 @@ export interface Discussion extends TenantAuditableEntity<DiscussionId> {
 /** Proposal requiring team or Decision Engine resolution. */
 export interface DecisionProposal extends TenantAuditableEntity<DecisionProposalId> {
   readonly conversationId: CollaborationConversationId;
+  /** The discussion thread this proposal was raised in — competing proposals in the same discussion are conflict candidates. */
+  readonly discussionId?: DiscussionId;
   readonly proposerWorkerId: WorkerId;
   readonly title: string;
   readonly rationale: string;

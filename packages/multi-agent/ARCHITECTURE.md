@@ -17,9 +17,10 @@ Business DNA (org structure & policies)
 Multi-Agent ── coordinates workers on missions
         │
         ├── AI Workforce ── digital employee management
-        ├── Workflow Engine ── process orchestration
+        ├── Workflow Engine ── process orchestration (coordination steps)
         ├── Decision Engine ── approval & policy
-        ├── AI Runtime ── task execution
+        ├── AI Runtime ── task execution (agent registry cross-validation)
+        ├── AI Brain ── ceo_ai-level escalation reasoning
         └── Institutional Memory ── shared knowledge
 ```
 
@@ -59,7 +60,7 @@ interface CollaborationOrchestrator {
 }
 ```
 
-Implementation lives in a future service — not in this package.
+Implemented by `createCollaborationOrchestrator` in `coordination/orchestrator.impl.ts`. It builds a real `CoordinationPlan`/`CoordinationStep` chain from a mission's assembled team, advances steps through a real `pending → ready → running → completed` progression, genuinely starts a `@lateen-os/workflow-engine` `WorkflowRuntime` instance at the `ready → running` transition when one is injected, escalates through the real Escalation service (which may itself consult AI Brain), and finalizes missions through the real Execution service and Mission Lifecycle.
 
 ---
 

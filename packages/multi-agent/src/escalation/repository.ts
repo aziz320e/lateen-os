@@ -1,5 +1,6 @@
 /** @module escalation/repository */
 import type { Repository } from '../shared/repository.js';
+import type { MissionId, OrganizationId } from '../shared/identifiers.js';
 import type {
   EscalationDecision,
   EscalationDecisionId,
@@ -7,5 +8,7 @@ import type {
   EscalationRequestId,
 } from './types.js';
 
-export type EscalationRequestRepository = Repository<EscalationRequest, EscalationRequestId>;
+export interface EscalationRequestRepository extends Repository<EscalationRequest, EscalationRequestId> {
+  findByMission(organizationId: OrganizationId, missionId: MissionId): Promise<readonly EscalationRequest[]>;
+}
 export type EscalationDecisionRepository = Repository<EscalationDecision, EscalationDecisionId>;

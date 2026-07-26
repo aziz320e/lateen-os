@@ -32,6 +32,9 @@ export interface DelegationRequest extends TenantAuditableEntity<CollaborationDe
   readonly rationale: string;
   readonly status: DelegationStatus;
   readonly requestedAt: Timestamp;
+  readonly respondedBy?: WorkerId;
+  readonly responseComment?: string;
+  readonly respondedAt?: Timestamp;
 }
 
 /** Response to a delegation request. */

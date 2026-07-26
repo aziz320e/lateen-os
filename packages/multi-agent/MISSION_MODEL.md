@@ -1,6 +1,6 @@
 # Multi-Agent — Mission Model
 
-> Contracts-only model for multi-agent collaboration on business objectives.
+> Real, implemented model for multi-agent collaboration on business objectives — see [README.md](./README.md) for the runtime and [ARCHITECTURE.md](./ARCHITECTURE.md) for the module map.
 
 ---
 
@@ -134,23 +134,37 @@ sequenceDiagram
 
 ## Domain events
 
+The real, published `CollaborationEventMap` (see [README.md](./README.md#event-bus) for the full list):
+
 | Event | When |
 | ----- | ---- |
 | `mission.started` | Mission enters active execution |
-| `mission.completed` | All objectives satisfied |
-| `worker.assigned` | Worker assigned to coordination step |
-| `delegation.created` | Inter-worker delegation initiated |
-| `consensus.reached` | Team agreement finalized |
-| `mission.escalated` | Unresolved conflict escalated |
+| `mission.completed` | All coordination steps resolved (success or failure) |
+| `mission.escalated` | Orchestrator escalates a mission via the Escalation service |
+| `agent.registered` | An agent is registered for collaboration |
+| `agent.availability_changed` | An agent's availability changes |
+| `session.started` / `session.ended` | A worker joins/leaves a mission |
+| `message.routed` | A message is broadcast to a conversation's participants |
+| `delegation.requested` / `delegation.responded` | Inter-worker delegation lifecycle |
+| `consensus.reached` | A vote tally is recorded |
+| `conflict.detected` / `conflict.resolved` | Competing proposals are found/resolved |
+| `coordination_step.advanced` | A coordination step progresses |
 
 ---
 
 ## Query ports
 
+The real `CollaborationQueries` port (see `queries/collaboration-queries.ts`):
+
 | Method | Purpose |
 | ------ | ------- |
-| `findMission()` | Discover missions by status/code |
-| `findTeams()` | List teams for a mission |
+| `findMission()` | Discover missions by status/code/id |
+| `findTeams()` | List teams for a mission or by team id |
 | `findOpenNegotiations()` | Active negotiation sessions |
 | `findPendingReviews()` | Reviews awaiting action |
 | `findConsensus()` | Consensus results by mission |
+| `findAgents()` | Registered agents by role/availability |
+| `findConflicts()` | Conflicts by mission/status |
+| `findWorkingMemory()` | Shared working-memory entries by mission/key |
+| `findActiveSessions()` | Active agent sessions for a mission |
+| `findCoordinationPlan()` | A mission's coordination plan and steps |
