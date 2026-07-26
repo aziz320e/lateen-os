@@ -1666,9 +1666,6 @@ importers:
 
   packages/ceo-engine:
     dependencies:
-      '@lateen-os/sdk':
-        specifier: workspace:*
-        version: link:../sdk
       '@lateen-os/shared-kernel':
         specifier: workspace:*
         version: link:../shared-kernel
@@ -1954,6 +1951,9 @@ importers:
       '@lateen-os/ai-brain':
         specifier: workspace:*
         version: link:../ai-brain
+      '@lateen-os/ai-provider-hub':
+        specifier: workspace:*
+        version: link:../ai-provider-hub
       '@lateen-os/ai-runtime':
         specifier: workspace:*
         version: link:../ai-runtime
@@ -1963,6 +1963,15 @@ importers:
       '@lateen-os/business-dna':
         specifier: workspace:*
         version: link:../business-dna
+      '@lateen-os/ceo-engine':
+        specifier: workspace:*
+        version: link:../ceo-engine
+      '@lateen-os/decision-engine':
+        specifier: workspace:*
+        version: link:../decision-engine
+      '@lateen-os/intelligence-engine':
+        specifier: workspace:*
+        version: link:../intelligence-engine
       '@lateen-os/multi-agent':
         specifier: workspace:*
         version: link:../multi-agent

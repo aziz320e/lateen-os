@@ -15,8 +15,7 @@
     "lint": "node -e \"process.exit(0)\""
   },
   "dependencies": {
-    "@lateen-os/shared-kernel": "workspace:*",
-    "@lateen-os/sdk": "workspace:*"
+    "@lateen-os/shared-kernel": "workspace:*"
   },
   "devDependencies": {
     "@lateen-os/typescript-config": "workspace:*",

@@ -38,9 +38,13 @@
   },
   "dependencies": {
     "@lateen-os/ai-brain": "workspace:*",
+    "@lateen-os/ai-provider-hub": "workspace:*",
     "@lateen-os/ai-runtime": "workspace:*",
     "@lateen-os/ai-workforce": "workspace:*",
     "@lateen-os/business-dna": "workspace:*",
+    "@lateen-os/ceo-engine": "workspace:*",
+    "@lateen-os/decision-engine": "workspace:*",
+    "@lateen-os/intelligence-engine": "workspace:*",
     "@lateen-os/multi-agent": "workspace:*",
     "@lateen-os/shared-kernel": "workspace:*",
     "@lateen-os/workflow-engine": "workspace:*",

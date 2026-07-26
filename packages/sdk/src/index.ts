@@ -11,6 +11,8 @@
 
 export * from './core/index.js';
 
+export * as system from './system/index.js';
+
 export * as application from './application/index.js';
 export * as service from './service/index.js';
 export * as plugin from './plugin/index.js';
@@ -24,7 +26,25 @@ export * as configuration from './configuration/index.js';
 export * as validation from './validation/index.js';
 export * as templates from './templates/index.js';
 
-// Core
+// Lateen OS runtime entry point — the official public composition root.
+// Wires shared-kernel, ai-provider-hub, decision-engine, intelligence-engine,
+// ai-runtime, ai-brain, and ceo-engine together. See system/index.ts.
+export {
+  createLateen,
+  type LateenConfig,
+  type LateenSystem,
+  type LateenClient,
+  type CEO,
+  type Brain,
+  type Runtime,
+  type DecisionEngine,
+  type IntelligenceEngine,
+  type ProviderHub,
+} from './system/index.js';
+
+// Core (LateenSDK — the extension-authoring toolkit: plugins, workers,
+// workflows, connectors, missions, commands. A separate concern from the
+// runtime composition root above.)
 export { LateenSDK, createLateenSDK } from './core/sdk.js';
 export type { SDKContext, SDKConfiguration, SdkEnvironment } from './core/types.js';
 export { SDK_VERSION, formatSdkVersion } from './core/version.js';
