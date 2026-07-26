@@ -1,0 +1,26 @@
+{
+  "name": "@lateen-os/ceo-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@lateen-os/shared-kernel": "workspace:*",
+    "@lateen-os/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}
