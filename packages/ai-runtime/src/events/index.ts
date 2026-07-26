@@ -49,3 +49,4 @@ export type AiRuntimeDomainEvent =
   | import('../permissions/events.js').RuntimePermissionDomainEvent
   | import('../monitoring/events.js').HealthDomainEvent
   | import('../telemetry/events.js').TelemetryDomainEvent;
+export * from './runtime-event-bus.js';

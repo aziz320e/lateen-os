@@ -1563,6 +1563,9 @@ importers:
 
   packages/ai-runtime:
     dependencies:
+      '@lateen-os/ai-provider-hub':
+        specifier: workspace:*
+        version: link:../ai-provider-hub
       '@lateen-os/business-dna':
         specifier: workspace:*
         version: link:../business-dna
@@ -1584,13 +1587,22 @@ importers:
       '@lateen-os/shared-kernel':
         specifier: workspace:*
         version: link:../shared-kernel
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
     devDependencies:
       '@lateen-os/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.13.10
+        version: 22.20.1
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vitest:
+        specifier: ^3.0.5
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0)
 
   packages/ai-workforce:
     dependencies:
