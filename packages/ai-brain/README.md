@@ -12,32 +12,27 @@ AI Brain is the **reasoning and orchestration contract layer** for the entire pl
 - Produce validated execution plans (**planning**)
 - Coordinate AI Runtime, Workflow Engine, and Multi-Agent (**orchestration**)
 
-AI Brain **does not** execute business logic, replace AI Runtime, or replace Workflow Engine. It orchestrates them.
+AI Brain **does not** execute business logic, replace AI Runtime, or replace Workflow Engine. It orchestrates them: it produces structured plans that reference their real id types, and a caller above this package — CEO Engine, via `sdk` — is responsible for actually invoking them with the returned plan. (AI Brain does not depend on `ceo-engine` itself: `ceo-engine → sdk → ai-brain`, so a dependency in the other direction would be a cycle. See [docs/adr/0003-no-cyclic-dependencies.md](../../docs/adr/0003-no-cyclic-dependencies.md).)
 
-## Contracts only
+## Real implementations
 
-- TypeScript interfaces and type aliases
-- Domain events (`{entity}.{action}` convention)
-- Query and capability ports (no implementations)
-- No LLM SDK
-- No business logic
-- No persistence
+Every port below has a real, deterministic, dependency-injected implementation — no LLM SDK, no hidden global state:
 
-## Modules
+| Module | Port | Implementation |
+| ------ | ---- | --------------- |
+| `intent` | `IntentRecognizer` | `recognizer.impl.ts` — keyword/punctuation classification, quoted-phrase and numeric-literal extraction |
+| `context` | `EnterpriseContextAssembler` | `assembler.impl.ts` — assembles business/conversation/mission context; enriches mission context from `@lateen-os/decision-engine`'s real `DecisionQueries` when injected |
+| `memory` | `WorkingMemory` | `working-memory.impl.ts` — deterministic working-context retrieval |
+| `reasoning` | `EnterpriseReasoner` | `reasoner.impl.ts` — ordered reasoning-step trace; `success` reflects whether intent classification was confident |
+| `routing` | `PlatformRouter` | `router.impl.ts` — genuinely invokes `@lateen-os/ai-runtime`'s real `AgentRegistryService` when injected to route worker plans to an actually-registered runtime agent |
+| `planner` | `BrainPlanner` | `planner.impl.ts` — turns a routing decision into an `ExecutionPlan` (mission/workflow/worker plans + execution graph) |
+| `validation` | `PlanValidator` | `validator.impl.ts` — permission/policy/business rule checks |
+| `reflection` | `BrainReflector` | `reflector.impl.ts` — self-evaluation and improvement suggestions |
+| `queries` | `BrainQueries` | `brain-queries.impl.ts` — reads AI Brain's own recorded plan/reasoning history |
+| `events` | `BrainEventBus` | `brain-event-bus.ts` — typed event bus (shared-kernel's `createEventBus`) for the five events `Brain.process()` publishes |
+| *(root)* | `Brain` | `brain.impl.ts` — `createBrain()`/`createBrainSystem()`, the composition root |
 
-| Module | Key types |
-| ------ | --------- |
-| `intent` | `Intent`, `IntentType`, `IntentConfidence`, `IntentEntity`, `IntentParameter` |
-| `planner` | `ExecutionPlan`, `MissionPlan`, `WorkflowPlan`, `WorkerPlan` |
-| `reasoning` | `ReasoningContext`, `ReasoningStep`, `ReasoningResult`, `ReasoningExplanation` |
-| `context` | `EnterpriseContext`, `BusinessContext`, `ConversationContext`, `MissionContext` |
-| `routing` | `ServiceRoute`, `WorkflowRoute`, `MissionRoute`, `WorkerRoute` |
-| `memory` | `WorkingContext`, `RetrievedKnowledge`, `RelevantEntities` |
-| `reflection` | `ReflectionResult`, `SelfEvaluation`, `PlanImprovement` |
-| `validation` | `PermissionValidation`, `PolicyValidation`, `BusinessValidation` |
-| `executionPlan` | `ExecutionGraph`, `ExecutionNode`, `ExecutionEdge`, `ExecutionCheckpoint` |
-| `queries` | `ExplainPlan`, `ExplainDecision`, `ExplainMission`, `FindRelevantKnowledge` |
-| `events` | `IntentRecognized`, `PlanCreated`, `PlanRejected`, `ExecutionRequested`, `ReasoningCompleted` |
+Multi-Agent and Workflow Engine are contracts-only packages today (no real implementation to call), so mission/workflow plans are structurally shaped to match their real id types rather than invoking them directly — see [PLANNING_MODEL.md](./PLANNING_MODEL.md).
 
 ## Dependencies
 
@@ -52,23 +47,23 @@ shared-kernel → business-dna → domain-graph → institutional-memory
 ## Usage
 
 ```typescript
-import {
-  brain,
-  intent,
-  planner,
-  events,
-  type Brain,
-  type Intent,
-  type ExecutionPlan,
-  BRAIN_EVENT_NAMES,
-} from '@lateen-os/ai-brain';
+import { createBrainSystem } from '@lateen-os/ai-brain';
 
-// Namespaced access
-type IntentType = intent.IntentType;
-type BrainPlan = planner.ExecutionPlan;
+// Optionally inject real collaborators: an ai-runtime AgentRegistryService,
+// a decision-engine DecisionQueries, and/or a BrainEventBus.
+const { brain, queries } = createBrainSystem();
 
-// Event subscription
-const eventName = BRAIN_EVENT_NAMES.PlanCreated; // 'plan.created'
+const response = await brain.process({
+  organizationId: 'org-1',
+  sessionId: 'session-1',
+  correlationId: 'corr-1',
+  rawInput: 'Start a mission to expand into a new market',
+  actorId: 'user-1',
+});
+
+// response: { intent, reasoning, plan, validation, reflection, executionRequested }
+
+const explanation = await queries.explainPlan({ organizationId: 'org-1', planId: response.plan.id });
 ```
 
 ## Documentation

@@ -1,6 +1,6 @@
 # AI Brain — Architecture
 
-Architecture v1.0 (locked). Contracts only.
+Architecture v1.0 (locked). Real, deterministic implementations of every port described below live alongside each `types.ts`/port file as `*.impl.ts` — see [README.md](./README.md) for the module-to-implementation map.
 
 ## Platform position
 

@@ -138,3 +138,34 @@ export type {
   ReasoningSessionId,
   OrganizationId,
 } from './shared/identifiers.js';
+
+// Real implementations — see each module's `.impl.ts` file.
+export { createIntentRecognizer } from './intent/recognizer.impl.js';
+export { createEnterpriseContextAssembler, type EnterpriseContextAssemblerDeps } from './context/assembler.impl.js';
+export { createWorkingMemory } from './memory/working-memory.impl.js';
+export { createEnterpriseReasoner, type EnterpriseReasonerDeps } from './reasoning/reasoner.impl.js';
+export { createPlatformRouter, type PlatformRouterDeps } from './routing/router.impl.js';
+export { createBrainPlanner } from './planner/planner.impl.js';
+export { createPlanValidator } from './validation/validator.impl.js';
+export { createBrainReflector } from './reflection/reflector.impl.js';
+export { createBrainQueries, type BrainQueriesDeps } from './queries/brain-queries.impl.js';
+export {
+  createReasoningSessionStore,
+  type ReasoningSessionStore,
+} from './reasoning/session-store.js';
+export {
+  createBrainEventBus,
+  type BrainEventBus,
+  type BrainEventMap,
+} from './events/brain-event-bus.js';
+export {
+  createBrain,
+  createBrainSystem,
+  type BrainDeps,
+  type BrainSystem,
+} from './brain.impl.js';
+export {
+  PlanNotFoundError,
+  DecisionExplanationNotFoundError,
+  MissionExplanationNotFoundError,
+} from './shared/errors.js';

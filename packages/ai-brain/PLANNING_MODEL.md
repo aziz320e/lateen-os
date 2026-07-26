@@ -1,6 +1,6 @@
 # AI Brain — Planning Model
 
-Contracts only. Describes how orchestration plans are structured — not how they are executed.
+Describes how orchestration plans are structured. Implemented deterministically in `planner/planner.impl.ts` — AI Brain still does not execute plans; it produces them for AI Runtime, Workflow Engine, and Multi-Agent to act on.
 
 ## Plan hierarchy
 

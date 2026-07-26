@@ -1,6 +1,6 @@
 # AI Brain — Reasoning Model
 
-Contracts only. Describes how enterprise reasoning is modeled — not how it is implemented.
+Describes how enterprise reasoning is modeled. Implemented deterministically in `reasoning/reasoner.impl.ts` and `memory/working-memory.impl.ts` — no LLM.
 
 ## Reasoning pipeline
 

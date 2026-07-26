@@ -1,5 +1,5 @@
 /** @module reasoning/types */
-import type { IntentId } from '../intent/types.js';
+import type { IntentId, IntentType } from '../intent/types.js';
 import type { TenantAuditableEntity } from '../shared/entity.js';
 import type {
   OrganizationId,
@@ -49,6 +49,8 @@ export interface ReasoningResult {
   readonly sessionId: ReasoningSessionId;
   readonly organizationId: OrganizationId;
   readonly intentId: IntentId;
+  /** Carried alongside `intentId` so routing can select targets without re-fetching the intent. */
+  readonly intentType: IntentType;
   readonly context: ReasoningContext;
   readonly steps: readonly ReasoningStep[];
   readonly explanation: ReasoningExplanation;
