@@ -1,0 +1,24 @@
+{
+  "name": "@lateen-os/integration-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "End-to-end integration test suite verifying Lateen OS engines work together through createLateen()",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "dependencies": {
+    "@lateen-os/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  }
+}
