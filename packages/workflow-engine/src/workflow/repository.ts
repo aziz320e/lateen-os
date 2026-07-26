@@ -1,5 +1,6 @@
 /** @module workflow/repository */
 import type { Repository } from '../shared/repository.js';
+import type { OrganizationId } from '../shared/identifiers.js';
 import type {
   WorkflowDefinition,
   WorkflowDefinitionId,
@@ -7,5 +8,7 @@ import type {
   WorkflowVersionId,
 } from './types.js';
 
-export type WorkflowDefinitionRepository = Repository<WorkflowDefinition, WorkflowDefinitionId>;
+export interface WorkflowDefinitionRepository extends Repository<WorkflowDefinition, WorkflowDefinitionId> {
+  findByCode(organizationId: OrganizationId, code: string): Promise<WorkflowDefinition | null>;
+}
 export type WorkflowVersionRepository = Repository<WorkflowVersion, WorkflowVersionId>;

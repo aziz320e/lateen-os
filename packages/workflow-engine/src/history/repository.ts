@@ -1,5 +1,6 @@
 /** @module history/repository */
 import type { Repository } from '../shared/repository.js';
+import type { OrganizationId, WorkflowInstanceId } from '../shared/identifiers.js';
 import type {
   AuditTrail,
   AuditTrailId,
@@ -9,6 +10,12 @@ import type {
   WorkflowHistoryId,
 } from './types.js';
 
-export type WorkflowHistoryRepository = Repository<WorkflowHistory, WorkflowHistoryId>;
-export type ExecutionHistoryRepository = Repository<ExecutionHistory, ExecutionHistoryId>;
-export type AuditTrailRepository = Repository<AuditTrail, AuditTrailId>;
+export interface WorkflowHistoryRepository extends Repository<WorkflowHistory, WorkflowHistoryId> {
+  findByInstance(organizationId: OrganizationId, instanceId: WorkflowInstanceId): Promise<readonly WorkflowHistory[]>;
+}
+export interface ExecutionHistoryRepository extends Repository<ExecutionHistory, ExecutionHistoryId> {
+  findByInstance(organizationId: OrganizationId, instanceId: WorkflowInstanceId): Promise<readonly ExecutionHistory[]>;
+}
+export interface AuditTrailRepository extends Repository<AuditTrail, AuditTrailId> {
+  findByInstance(organizationId: OrganizationId, instanceId: WorkflowInstanceId): Promise<readonly AuditTrail[]>;
+}

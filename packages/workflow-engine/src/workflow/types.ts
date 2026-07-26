@@ -1,4 +1,6 @@
 /** @module workflow/types */
+import type { Transition } from '../transition/types.js';
+import type { WorkflowStep } from '../step/types.js';
 import type { TenantAuditableEntity } from '../shared/entity.js';
 import type {
   OrganizationId,
@@ -36,6 +38,10 @@ export interface WorkflowVersion extends TenantAuditableEntity<WorkflowVersionId
   readonly version: SemanticVersion;
   readonly status: WorkflowDefinitionStatus;
   readonly stepIds: readonly WorkflowStepId[];
+  /** Full step definitions for this version — the executable graph. */
+  readonly steps: readonly WorkflowStep[];
+  /** Transitions between the steps above — sequential, conditional, or parallel. */
+  readonly transitions: readonly Transition[];
   readonly publishedAt?: Timestamp;
   readonly changeNotes?: string;
 }

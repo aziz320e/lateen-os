@@ -99,3 +99,71 @@ export type { ApprovalStepRepository } from './approval/repository.js';
 export type { WorkflowHistoryRepository } from './history/repository.js';
 export type { WorkflowTemplateRepository } from './templates/repository.js';
 export type { WorkflowScheduleRepository } from './scheduler/repository.js';
+
+// Additive type refinements needed by the real implementation below.
+export type { WaitStep } from './step/types.js';
+export type { RetryPolicy, RetryBackoffStrategy } from './execution/types.js';
+
+// Real implementations — see each module's `.impl.ts` file.
+export { createWorkflowDefinitionRepository, createWorkflowVersionRepository } from './workflow/repository.impl.js';
+export { createWorkflowInstanceRepository, createWorkflowExecutionRepository } from './instance/repository.impl.js';
+export { createStepInstanceRepository } from './step/repository.impl.js';
+export { createApprovalStepRepository, createApprovalChainRepository } from './approval/repository.impl.js';
+export {
+  createWorkflowHistoryRepository,
+  createExecutionHistoryRepository,
+  createAuditTrailRepository,
+} from './history/repository.impl.js';
+export { createWorkflowTemplateRepository } from './templates/repository.impl.js';
+export { createWorkflowScheduleRepository } from './scheduler/repository.impl.js';
+export { createTriggerDefinitionRepository } from './trigger/repository.impl.js';
+export {
+  createExpressionRepository,
+  createRuleRepository,
+  createPolicyConditionRepository,
+} from './condition/repository.impl.js';
+
+export type { ConditionEvaluator } from './condition/evaluator.js';
+export { createConditionEvaluator } from './condition/evaluator.impl.js';
+
+export { computeRetryDelayMs, canRetry, runWithRetryPolicy, type RetryPolicyResult } from './execution/retry.js';
+
+export {
+  canTransitionWorkflow,
+  transitionWorkflowInstance,
+  canTransitionStep,
+  transitionStepInstance,
+} from './execution/state-machine.js';
+
+export { resolveNextSteps, type NextStepsResolution, type ResolveNextStepsDeps } from './execution/transition-resolver.js';
+
+export type { StepHandler, StepHandlerContext, StepHandlerResult } from './execution/step-handler.js';
+
+export { createWorkflowOrchestrator, type WorkflowOrchestratorDeps } from './execution/orchestrator.impl.js';
+
+export { createWorkflowQueries, type WorkflowQueriesDeps } from './queries/workflow-queries.impl.js';
+
+export { createWorkflowEventBus, type WorkflowEventBus, type WorkflowEventMap } from './events/workflow-event-bus.js';
+
+export {
+  createWorkflowRuntime,
+  type WorkflowRuntime,
+  type WorkflowRuntimeDeps,
+  type DefineWorkflowInput,
+  type DefinedWorkflow,
+  type StartWorkflowInput,
+} from './runtime.js';
+
+export {
+  WorkflowDefinitionNotFoundError,
+  WorkflowVersionNotFoundError,
+  WorkflowInstanceNotFoundError,
+  StepInstanceNotFoundError,
+  WorkflowStepNotFoundError,
+  InvalidWorkflowTransitionError,
+  InvalidStepTransitionError,
+  UnsupportedExpressionLanguageError,
+  ConditionEvaluationError,
+  WaitNotElapsedError,
+  NoOutgoingTransitionError,
+} from './shared/errors.js';

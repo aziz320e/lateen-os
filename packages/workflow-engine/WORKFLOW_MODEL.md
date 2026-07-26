@@ -200,6 +200,6 @@ sequenceDiagram
 
 ## Constraints
 
-- Contracts only — no UI, REST, database, LLM, or persistence
+- Real, deterministic, in-memory implementation (see [README.md](./README.md)) — no UI, REST, database, or LLM. Step *business logic* is still delegated to an injected `StepHandler`, never executed by this package.
 - Engine coordinates; platform packages execute
 - All decision finalization via `@lateen-os/decision-engine`
