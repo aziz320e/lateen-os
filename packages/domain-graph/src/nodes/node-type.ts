@@ -26,7 +26,15 @@ export type GraphNodeType =
   | 'order'
   | 'invoice'
   | 'ai_agent'
-  | 'kpi';
+  | 'kpi'
+  | 'lead'
+  | 'contact'
+  | 'competitor'
+  | 'market'
+  | 'mission'
+  | 'knowledge'
+  | 'document'
+  | 'campaign';
 
 /** Runtime-constant list of all graph node types. */
 export const GRAPH_NODE_TYPES: readonly GraphNodeType[] = [
@@ -49,4 +57,12 @@ export const GRAPH_NODE_TYPES: readonly GraphNodeType[] = [
   'invoice',
   'ai_agent',
   'kpi',
+  'lead',
+  'contact',
+  'competitor',
+  'market',
+  'mission',
+  'knowledge',
+  'document',
+  'campaign',
 ] as const;

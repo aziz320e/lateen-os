@@ -24,17 +24,33 @@ export * from './order.js';
 export * from './invoice.js';
 export * from './ai-agent.js';
 export * from './kpi.js';
+export * from './lead.js';
+export * from './contact.js';
+export * from './competitor.js';
+export * from './market.js';
+export * from './mission.js';
+export * from './knowledge.js';
+export * from './document.js';
+export * from './campaign.js';
 
 import { aiAgentNodeDefinition } from './ai-agent.js';
 import { assetNodeDefinition } from './asset.js';
 import { branchNodeDefinition } from './branch.js';
+import { campaignNodeDefinition } from './campaign.js';
 import { capabilityNodeDefinition } from './capability.js';
+import { competitorNodeDefinition } from './competitor.js';
+import { contactNodeDefinition } from './contact.js';
 import { customerNodeDefinition } from './customer.js';
 import { departmentNodeDefinition } from './department.js';
+import { documentNodeDefinition } from './document.js';
 import { employeeNodeDefinition } from './employee.js';
 import { invoiceNodeDefinition } from './invoice.js';
+import { knowledgeNodeDefinition } from './knowledge.js';
 import { kpiNodeDefinition } from './kpi.js';
+import { leadNodeDefinition } from './lead.js';
 import { machineNodeDefinition } from './machine.js';
+import { marketNodeDefinition } from './market.js';
+import { missionNodeDefinition } from './mission.js';
 import { orderNodeDefinition } from './order.js';
 import { organizationNodeDefinition } from './organization.js';
 import type { GraphNodeDefinition } from './types.js';
@@ -68,4 +84,12 @@ export const GRAPH_NODE_DEFINITIONS: Readonly<Record<GraphNodeType, GraphNodeDef
   invoice: invoiceNodeDefinition,
   ai_agent: aiAgentNodeDefinition,
   kpi: kpiNodeDefinition,
+  lead: leadNodeDefinition,
+  contact: contactNodeDefinition,
+  competitor: competitorNodeDefinition,
+  market: marketNodeDefinition,
+  mission: missionNodeDefinition,
+  knowledge: knowledgeNodeDefinition,
+  document: documentNodeDefinition,
+  campaign: campaignNodeDefinition,
 };

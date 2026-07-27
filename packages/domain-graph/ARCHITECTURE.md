@@ -6,7 +6,7 @@
 
 `@lateen-os/domain-graph` defines the **canonical semantic graph** of Lateen OS — how Business DNA entities, capabilities, and commercial documents relate to each other.
 
-The package provides types, ontology rules, and port interfaces only. It does **not** store data, implement a graph database, or contain business logic.
+The Graph Lifecycle, Entity Registry, Relationship Engine, Graph Repository, Traversal Engine, Validation engine, Search engine, query layer, and event bus are **real, deterministic, in-memory implementations** — see `runtime.ts`'s `createDomainGraphRuntime()` for the composition root. The original ontology system (`nodes/` per-type schema definitions, the upper-snake-case `RelationshipType`, `ontology/`, `reasoning/`, and the pre-existing `traversal`/`queries` port interfaces) remains types, ontology rules, and port interfaces only — it does **not** store data, implement a graph database, or contain business logic. Both coexist deliberately: see "Two relationship vocabularies" below.
 
 ---
 
@@ -22,17 +22,21 @@ The package provides types, ontology rules, and port interfaces only. It does **
 
 ## Module reference
 
-### `graph/` — Core structures
+### `graph/` — Core structures + real Graph Lifecycle
 
-| Type | Description |
-| ---- | ----------- |
-| `GraphNode` | Vertex representing a Business DNA or Capability entity |
-| `GraphEdge` | Directed semantic relationship between nodes |
-| `GraphPath` | Ordered walk through nodes and edges |
-| `GraphMetadata` | Summary statistics about a graph view |
-| `GraphSnapshot` | Immutable point-in-time graph view (type only) |
+| Type | Description | Real? |
+| ---- | ----------- | ----- |
+| `GraphNode` | Vertex representing a Business DNA or Capability entity (now carries optional `graphId`/`status`/`createdAt`/`updatedAt` for the real registry) | — |
+| `GraphEdge` | Directed ontology relationship between nodes (upper-snake-case `RelationshipType`) | contracts only |
+| `GraphPath` | Ordered walk through nodes and edges (ontology-typed) | contracts only |
+| `GraphMetadata` | Summary statistics about a graph view | — |
+| `GraphSnapshot` | Immutable point-in-time graph view (type only) | contracts only |
+| `DomainGraph` | Real, lifecycle-managed graph container | ✅ `GraphLifecycle` |
+| `DomainRelationshipType` | 14-value lowercase relationship vocabulary for the real Relationship Engine | ✅ |
+| `GraphRelationship` | Real, persisted relationship (distinct from ontology `GraphEdge`) | ✅ |
+| `graph/algorithms.ts` | Pure BFS/DFS/shortestPath/detectCycles/dependencyOrder/connectedComponents — shared by `store/` and `traversal/` | ✅ |
 
-### `nodes/` — 19 node definitions
+### `nodes/` — 27 node definitions
 
 Each node module exports:
 
@@ -40,15 +44,17 @@ Each node module exports:
 - `{entity}NodeDefinition` — schema metadata
 - `GRAPH_NODE_DEFINITIONS` — full registry
 
-### `relationships/` — 17 relationship types
+19 original node types plus 8 added by this commit: `lead`, `contact`, `competitor`, `market`, `mission`, `knowledge`, `document`, `campaign`.
 
-`RelationshipType` union with `RELATIONSHIP_TYPE_DEFINITIONS` metadata (description, directed flag).
+### `relationships/` — 17 ontology relationship types (contracts only)
 
-### `edges/` — Edge definitions
+`RelationshipType` union with `RELATIONSHIP_TYPE_DEFINITIONS` metadata (description, directed flag). See "Two relationship vocabularies" below for why the real Relationship Engine does not reuse this type.
+
+### `edges/` — Edge definitions (contracts only)
 
 `GraphEdgeDefinition` and `TypedGraphEdge` for schema-level edge typing.
 
-### `ontology/` — Canonical rules
+### `ontology/` — Canonical rules (contracts only)
 
 | Export | Description |
 | ------ | ----------- |
@@ -57,18 +63,39 @@ Each node module exports:
 | `ONTOLOGY_SEMANTIC_ALIASES` | Natural-language mappings |
 | `ONTOLOGY_VERSION` | Schema version (`1.0.0`) |
 
-### `traversal/` — Navigation ports
+### `store/` — Real, internal repositories
 
-| Port | Responsibility |
-| ---- | -------------- |
-| `GraphTraversal` | Bounded walks from a root node |
-| `GraphNavigator` | Immediate neighbors and incident edges |
-| `GraphExplorer` | Subgraph exploration and snapshots |
-| `GraphPathFinder` | Path discovery between nodes |
+`EntityRepository`, `RelationshipRepository`, and the combined `GraphRepository` facade (`findEntity`/`findEntities`/`findRelationships`/`findNeighbors`/`findParents`/`findChildren`/`shortestPath`/`connectedComponents`). Never exposed by `createDomainGraphRuntime()` — internal to the composition root.
 
-### `queries/` — Read-side query port
+### `entities/` — Real Entity Registry
 
-`GraphQueries` methods:
+`register()` / `update()` / `archive()` over `EntityRepository`, publishing `entity.created`/`entity.updated`/`entity.archived`.
+
+### `relationship-engine/` — Real Relationship Engine
+
+`create()` (dangling-guarded) / `update()` / `delete()`, publishing `relationship.created`/`relationship.updated`/`relationship.deleted`.
+
+### `traversal/` — Navigation ports (contracts) + real Traversal Engine
+
+| Port | Responsibility | Real? |
+| ---- | -------------- | ----- |
+| `GraphTraversal` | Bounded walks from a root node | contracts only |
+| `GraphNavigator` | Immediate neighbors and incident edges | contracts only |
+| `GraphExplorer` | Subgraph exploration and snapshots | contracts only |
+| `GraphPathFinder` | Path discovery between nodes | contracts only |
+| `TraversalEngine` | BFS / DFS / shortestPath / detectCycles / dependencyOrder | ✅ real |
+
+### `validation/` — Real Validation engine
+
+Duplicate entity detection, dangling relationship detection, orphan detection, cycle validation; `validate()` aggregates all four and publishes `graph.validated`.
+
+### `search/` — Real Search engine
+
+Deterministic search by name, type, tags, and metadata — no embeddings, no vector search.
+
+### `queries/` — Read-side query ports
+
+`GraphQueries` (contracts only — ontology-oriented):
 
 | Method | Purpose |
 | ------ | ------- |
@@ -84,7 +111,13 @@ Each node module exports:
 | `findMachinesForCapability` | Capability → Machine |
 | `findCustomersUsingCapability` | Capability → Customer |
 
-### `reasoning/` — Semantic analysis ports
+`DomainGraphQueries` (real, exposed by `createDomainGraphRuntime()`): `findEntity`, `searchEntities`, `findRelationships`, `findNeighbors`, `shortestPath`, `dependencyOrder`, `detectCycles`, `graphStatistics`.
+
+### `events/` — Real typed event bus
+
+`DomainGraphEventMap` — the 8 required events, each genuinely published: `entity.created`, `entity.updated`, `entity.archived`, `relationship.created`, `relationship.updated`, `relationship.deleted`, `graph.validated`, `graph.rebuilt`.
+
+### `reasoning/` — Semantic analysis ports (contracts only)
 
 | Port | Responsibility |
 | ---- | -------------- |
@@ -92,6 +125,21 @@ Each node module exports:
 | `ImpactAnalyzer` | Downstream impact of changes |
 | `DependencyAnalyzer` | DEPENDS_ON / REQUIRES chains |
 | `ContextResolver` | Entity context for AI agents |
+
+---
+
+## Two relationship vocabularies
+
+This package intentionally has **two** relationship type systems:
+
+| | `RelationshipType` (`relationships/`) | `DomainRelationshipType` (`graph/types.ts`) |
+| - | - | - |
+| Casing | `UPPER_SNAKE_CASE` | `lower_snake_case` |
+| Count | 17 | 14 |
+| Governs | `GraphEdge` / `CANONICAL_ONTOLOGY` triples | `GraphRelationship` (real Relationship Engine) |
+| Status | Pre-existing, contracts only | Added by this commit, real |
+
+They were kept separate rather than merged because renaming or widening the pre-existing `RelationshipType` would have altered an already-locked ontology contract (`CANONICAL_ONTOLOGY`, `ONTOLOGY_SEMANTIC_ALIASES`) that other packages may come to depend on verbatim. `GraphNode` is shared by both systems (extended additively with optional `graphId`/`status`/timestamps); `GraphEdge` (ontology) and `GraphRelationship` (real) are kept as separate, non-overlapping types.
 
 ---
 
@@ -263,8 +311,11 @@ Root re-exports cover graph structures, node/relationship registries, ontology, 
 | Artifact | Status |
 | -------- | ------ |
 | Lateen OS Architecture | v1.0 Locked |
-| Node types | 19 / 19 |
-| Relationship types | 17 / 17 |
-| Query methods | 11 / 11 |
-| Reasoning ports | 4 / 4 |
+| Node types | 27 / 27 (19 ontology + 8 real-runtime: lead/contact/competitor/market/mission/knowledge/document/campaign) |
+| Ontology relationship types | 17 / 17 (contracts only) |
+| Real Relationship Engine types | 14 / 14 (`DomainRelationshipType`) |
+| Ontology query methods | 11 / 11 (contracts only) |
+| Real query methods | 8 / 8 (`DomainGraphQueries`) |
+| Reasoning ports | 4 / 4 (contracts only) |
+| Real runtime events | 8 / 8 (`DomainGraphEventMap`) |
 | Ontology version | 1.0.0 |

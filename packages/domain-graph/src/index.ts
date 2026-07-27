@@ -18,15 +18,35 @@ export * as ontology from './ontology/index.js';
 export * as traversal from './traversal/index.js';
 export * as queries from './queries/index.js';
 export * as reasoning from './reasoning/index.js';
+export * as store from './store/index.js';
+export * as entities from './entities/index.js';
+export * as relationshipEngine from './relationship-engine/index.js';
+export * as validation from './validation/index.js';
+export * as search from './search/index.js';
+export * as events from './events/index.js';
+
+export {
+  createDomainGraphRuntime,
+  type DomainGraphRuntime,
+  type DomainGraphRuntimeDeps,
+} from './runtime.js';
 
 /** Core graph structures. */
 export type {
   GraphNode,
+  GraphNodeStatus,
   GraphEdge,
   GraphPath,
   GraphMetadata,
   GraphSnapshot,
+  DomainGraph,
+  DomainGraphStatus,
+  DomainRelationshipType,
+  GraphRelationship,
 } from './graph/types.js';
+export { DOMAIN_RELATIONSHIP_TYPES } from './graph/types.js';
+export type { DomainGraphRepository } from './graph/repository.js';
+export type { GraphLifecycle, CreateDomainGraphInput, UpdateDomainGraphInput } from './graph/lifecycle.impl.js';
 
 /** Node types and registry. */
 export type { GraphNodeType } from './nodes/node-type.js';
@@ -86,4 +106,34 @@ export type {
   GraphNodeId,
   GraphEdgeId,
   GraphSnapshotId,
+  DomainGraphId,
 } from './shared/identifiers.js';
+
+/** Real Entity Registry. */
+export type { EntityRegistry } from './entities/registry.impl.js';
+export type { RegisterEntityInput, UpdateEntityInput } from './entities/types.js';
+
+/** Real Relationship Engine. */
+export type { RelationshipEngine } from './relationship-engine/engine.impl.js';
+export type { CreateRelationshipInput, UpdateRelationshipInput } from './relationship-engine/types.js';
+
+/** Real Traversal Engine. */
+export type { TraversalEngine, TraversalRunOptions, DependencyOrderOptions } from './traversal/engine.impl.js';
+
+/** Real Validation engine. */
+export type { GraphValidationEngine } from './validation/engine.impl.js';
+export type { GraphValidationReport, DuplicateEntityGroup, DanglingRelationshipReport } from './validation/types.js';
+
+/** Real Search engine. */
+export type { GraphSearchEngine } from './search/engine.impl.js';
+export type { SearchEntitiesQuery, EntitySearchMatch } from './search/types.js';
+
+/** Real Graph Repository facade types (internal — repositories are never exposed by the runtime). */
+export type { EntityFilter, RelationshipFilter, NeighborDirection, GraphPathResult } from './store/graph-repository.js';
+
+/** Real query layer. */
+export type { DomainGraphQueries } from './queries/domain-graph-queries.js';
+
+/** Typed event bus. */
+export type { DomainGraphDomainEvent } from './events/domain-graph-events.js';
+export { DOMAIN_GRAPH_EVENT_NAMES } from './events/domain-graph-events.js';
