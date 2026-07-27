@@ -89,3 +89,39 @@ export type RolloutPhaseId = EntityId;
 
 /** Recurring order schedule identifier on a Customer. */
 export type RecurringScheduleId = EntityId;
+
+/** Business Profile is a singleton per organization — its id is the owning OrganizationId. */
+export type BusinessProfileId = OrganizationId;
+
+/** Vision & Mission is a singleton per organization — its id is the owning OrganizationId. */
+export type VisionMissionId = OrganizationId;
+
+/** Strategic objective identifier (entity within Vision & Mission). */
+export type StrategicObjectiveId = EntityId;
+
+/** Business DNA Profile is a singleton per organization — its id is the owning OrganizationId. */
+export type BusinessDnaProfileId = OrganizationId;
+
+/** Ideal Customer Profile identifier (entity within Business DNA Profile). */
+export type IcpId = EntityId;
+
+/** Persona identifier (entity within Business DNA Profile). */
+export type PersonaId = EntityId;
+
+/** Brand rule identifier (entity within Business DNA Profile). */
+export type BrandRuleId = EntityId;
+
+/** Competitive advantage identifier (entity within Business DNA Profile). */
+export type CompetitiveAdvantageId = EntityId;
+
+/** Market Model is a singleton per organization — its id is the owning OrganizationId. */
+export type MarketModelId = OrganizationId;
+
+/** Operating market identifier (entity within Market Model). */
+export type MarketId = EntityId;
+
+/** Competitor aggregate identifier. */
+export type CompetitorId = EntityId;
+
+/** Product bundle identifier (entity within Product Catalog). */
+export type ProductBundleId = EntityId;

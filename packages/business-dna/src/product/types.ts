@@ -1,6 +1,6 @@
 /** @module product/types — Enrichment v1 */
 import type { Entity } from '../shared/entity.js';
-import type { MachineId, OrganizationId, ProductId, SupplierId } from '../shared/identifiers.js';
+import type { MachineId, OrganizationId, ProductBundleId, ProductId, SupplierId } from '../shared/identifiers.js';
 import type {
   Auditable,
   BusinessCode,
@@ -113,6 +113,23 @@ export interface Product extends Entity<ProductId>, TenantScoped, Auditable {
   readonly aiLastAnalyzedAt?: ISODateTime;
   readonly aiSummary?: string;
   readonly supplierId?: SupplierId;
+}
+
+/** A line within a product bundle, referencing a catalog product by quantity. */
+export interface ProductBundleItem {
+  readonly productId: ProductId;
+  readonly quantity: string;
+}
+
+/** A priced bundle of catalog products, sharing the Product lifecycle statuses. */
+export interface ProductBundle extends Entity<ProductBundleId>, TenantScoped, Auditable {
+  readonly code: BusinessCode;
+  readonly name: string;
+  readonly description?: string;
+  readonly items: readonly ProductBundleItem[];
+  readonly bundlePrice?: string;
+  readonly currency: CurrencyCode;
+  readonly status: ProductStatus;
 }
 
 export type { OrganizationId };

@@ -46,6 +46,8 @@ export interface Organization extends Entity<OrganizationId>, Auditable {
   readonly legalName: string;
   readonly registrationNumber: string;
   readonly taxId: string;
+  /** Primary web domain (e.g. "acme.com") — unique lookup key alongside code. */
+  readonly domain?: string;
   readonly status: OrganizationStatus;
   readonly defaultCurrency: CurrencyCode;
   readonly defaultLocale: LocaleCode;

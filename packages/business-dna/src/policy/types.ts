@@ -21,7 +21,10 @@ export type PolicyType =
   | 'operational'
   | 'security'
   | 'hr'
-  | 'sales';
+  | 'sales'
+  | 'business'
+  | 'approval'
+  | 'communication';
 export type PolicySeverity = 'info' | 'warning' | 'critical';
 
 export interface Policy extends Entity<PolicyId>, TenantScoped, Auditable {

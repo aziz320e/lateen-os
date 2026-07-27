@@ -5,16 +5,16 @@
 
 ## Package purpose
 
-`@lateen-os/business-dna` is the **canonical Business DNA SDK** for Lateen OS — Layer 1 of the architecture. It defines the single source of truth for the business model as TypeScript types only.
+`@lateen-os/business-dna` is the **canonical Business DNA SDK** for Lateen OS — Layer 1 of the architecture. It defines the single source of truth for the business model.
 
-The package provides:
+The Organization Lifecycle, Business Profile, Vision & Mission Engine, Business DNA Engine (ICP/personas/positioning/etc.), Market Model, Competitor Registry, Product Catalog, Policy Engine, query layer, and event bus are **real, deterministic, in-memory implementations** — see `runtime.ts`'s `createBusinessDnaRuntime()` for the composition root, and each module's `*.impl.ts` files. The remaining 18 aggregates (branch, department, employee, customer, supplier, service, machine, project, quotation, order, invoice, workflow, kpi, asset, agent, role, permission) remain:
 
 - **Aggregate interfaces** — entity shapes, status enums, and lifecycle states
 - **Value object interfaces** — composable, immutable domain concepts where applicable
 - **Domain event types** — typed `{entity}.{action}` events for integration
 - **Repository ports** — persistence contracts with no implementations
 
-It deliberately excludes UI, APIs, databases, ORM mappings, and business logic. Downstream layers (Core, Intelligence, AI Workforce, Business Domains, Applications) consume this package; Business DNA never depends on them.
+It deliberately excludes UI, APIs, databases, ORM mappings, and LLM integration. Downstream layers (Core, Intelligence, AI Workforce, Business Domains, Applications) consume this package; Business DNA never depends on them.
 
 ---
 
@@ -33,6 +33,8 @@ The shared kernel holds cross-cutting building blocks used by all aggregates:
 | `repository.ts` | Generic `Repository<TEntity, TId>` port |
 | `enums.ts` | Cross-aggregate enums (`SlaTier`, `RegionCoverage`) |
 | `commercial.ts` | Shared commercial value types (money, line items) |
+| `id.ts` | Dependency-free `generateId`/`nowIso` helpers used by every real `*.impl.ts` |
+| `errors.ts` | Typed errors thrown by the real engines/services |
 
 **Rule:** Aggregates import from `shared/` freely. `shared/` never imports from aggregate modules.
 
@@ -40,30 +42,39 @@ The shared kernel holds cross-cutting building blocks used by all aggregates:
 
 ## Aggregate list
 
-All 20 Business DNA schema entities are implemented as aggregate modules:
+All 20 Business DNA schema entities are implemented as aggregate modules, plus 5 new modules added by the real runtime (`business-profile`, `vision-mission`, `dna`, `market`, `competitor`) and 2 cross-cutting modules (`queries`, `events`):
 
-| Module | Schema entity | Value objects | Enrichment |
-| ------ | ------------- | ------------- | ---------- |
-| `organization` | Organization | Yes | v1 |
-| `branch` | Branch | — | — |
-| `department` | Department | — | — |
-| `employee` | Employee | — | — |
-| `role` | Role | Yes | — |
-| `permission` | Permission | Yes | — |
-| `customer` | Customer | Yes | v1 |
-| `supplier` | Supplier | — | — |
-| `product` | Product | Yes | v1 |
-| `service` | Service | — | — |
-| `machine` | Machine | Yes | v1 |
-| `project` | Project | Yes | v1 |
-| `quotation` | Quotation | — | — |
-| `order` | Order | — | — |
-| `invoice` | Invoice | — | — |
-| `workflow` | Workflow | Yes | — |
-| `policy` | Policy | — | — |
-| `kpi` | KPI | — | — |
-| `asset` | Asset | — | — |
-| `agent` | AI Agent | Yes | — |
+| Module | Schema entity | Value objects | Enrichment | Real? |
+| ------ | ------------- | ------------- | ---------- | ----- |
+| `organization` | Organization | Yes | v1 | ✅ `OrganizationLifecycle` |
+| `branch` | Branch | — | — | contracts only |
+| `department` | Department | — | — | contracts only |
+| `employee` | Employee | — | — | contracts only |
+| `role` | Role | Yes | — | contracts only |
+| `permission` | Permission | Yes | — | contracts only |
+| `customer` | Customer | Yes | v1 | contracts only |
+| `supplier` | Supplier | — | — | contracts only |
+| `product` | Product | Yes | v1 | ✅ `ProductCatalogService` (+ `ProductBundle`) |
+| `service` | Service | — | — | contracts only |
+| `machine` | Machine | Yes | v1 | contracts only |
+| `project` | Project | Yes | v1 | contracts only |
+| `quotation` | Quotation | — | — | contracts only |
+| `order` | Order | — | — | contracts only |
+| `invoice` | Invoice | — | — | contracts only |
+| `workflow` | Workflow | Yes | — | contracts only |
+| `policy` | Policy | — | — | ✅ `PolicyEngine` |
+| `kpi` | KPI | — | — | contracts only |
+| `asset` | Asset | — | — | contracts only |
+| `agent` | AI Agent | Yes | — | contracts only |
+| `business-profile` | *(new)* | Yes (`LegalEntity`) | — | ✅ `BusinessProfileService` |
+| `vision-mission` | *(new)* | — | — | ✅ `VisionMissionEngine` |
+| `dna` | *(new)* | — | — | ✅ `DnaEngine` |
+| `market` | *(new)* | — | — | ✅ `MarketEngine` |
+| `competitor` | *(new)* | — | — | ✅ `CompetitorRegistry` |
+| `queries` | — | — | — | ✅ `BusinessDnaQueries` |
+| `events` | — | — | — | ✅ `BusinessDnaEventBus` |
+
+`runtime.ts` is the composition root: `createBusinessDnaRuntime()` wires every real in-memory repository into the services above and exposes only `organization`, `businessProfile`, `visionMission`, `dna`, `market`, `competitors`, `products`, `policies`, `queries`, and `events` — repositories are never part of the returned surface.
 
 Each aggregate module follows the same DDD file layout:
 
@@ -157,8 +168,10 @@ Each aggregate module follows the same DDD file layout:
 | `employee/types`, `employee/events` | `RoleId` from `role/types` |
 | `agent/types` | `RoleId` from `role/types`, `PermissionId` from `permission/types` |
 | `role/events` | `PermissionId` from `permission/types` |
+| `business-profile/types` | `IndustryVertical` from `organization/types` (type-only enum reuse) |
+| `queries/*` | `Organization`/`OrganizationStatus` (`organization`), `BusinessProfile` (`business-profile`), `Product`/`ProductCategory`/`ProductStatus` (`product`), `Competitor`/`CompetitorStatus` (`competitor`), `Policy`/`PolicyType`/`PolicyStatus` (`policy`), `MarketModel` (`market`) — the query layer is a read-side composition over repositories, not an aggregate, so it may reference every aggregate's `types.ts` |
 
-All other aggregates reference related entities **by ID** through `shared/identifiers.ts` only — no aggregate-to-aggregate module imports.
+All other aggregates reference related entities **by ID** through `shared/identifiers.ts` only — no aggregate-to-aggregate module imports. No cycle is introduced: `organization/types` does not import `business-profile/types`, and none of the new modules (`business-profile`, `vision-mission`, `dna`, `market`, `competitor`) import each other.
 
 ---
 
@@ -332,4 +345,4 @@ Verified import graph (Sprint 1.2):
 | -------- | ------- |
 | Lateen OS Architecture | v1.0 Locked |
 | Business DNA schema entities | 20 / 20 |
-| Package aggregates | 20 / 20 |
+| Package aggregates | 20 / 20 (+ 5 real-runtime modules: `business-profile`, `vision-mission`, `dna`, `market`, `competitor`) |

@@ -12,6 +12,7 @@ export type OrganizationEventName =
   | DomainEventName<'organization', 'activated'>
   | DomainEventName<'organization', 'suspended'>
   | DomainEventName<'organization', 'archived'>
+  | DomainEventName<'organization', 'restored'>
   | DomainEventName<'organization', 'ai_policy_updated'>
   | DomainEventName<'organization', 'production_model_changed'>
   | DomainEventName<'organization', 'updated'>;
@@ -36,6 +37,7 @@ export type OrganizationDomainEvent =
   | DomainEvent<'organization.activated', OrganizationStatusChangedPayload>
   | DomainEvent<'organization.suspended', OrganizationStatusChangedPayload>
   | DomainEvent<'organization.archived', OrganizationStatusChangedPayload>
+  | DomainEvent<'organization.restored', OrganizationStatusChangedPayload>
   | DomainEvent<'organization.ai_policy_updated', Record<string, unknown>>
   | DomainEvent<'organization.production_model_changed', OrganizationProductionModelChangedPayload>
   | DomainEvent<'organization.updated', Record<string, unknown>>;

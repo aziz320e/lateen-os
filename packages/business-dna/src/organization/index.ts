@@ -9,3 +9,11 @@ export * from './types.js';
 export * from './value-objects.js';
 export * from './events.js';
 export * from './repository.js';
+export { createOrganizationRepository } from './repository.impl.js';
+export {
+  createOrganizationLifecycle,
+  canTransitionOrganization,
+  type OrganizationLifecycle,
+  type CreateOrganizationInput,
+  type UpdateOrganizationInput,
+} from './lifecycle.impl.js';

@@ -38,6 +38,19 @@ export * as asset from './asset/index.js';
 export * as agent from './agent/index.js';
 export * as role from './role/index.js';
 export * as permission from './permission/index.js';
+export * as businessProfile from './business-profile/index.js';
+export * as visionMission from './vision-mission/index.js';
+export * as dna from './dna/index.js';
+export * as market from './market/index.js';
+export * as competitor from './competitor/index.js';
+export * as queries from './queries/index.js';
+export * as events from './events/index.js';
+
+export {
+  createBusinessDnaRuntime,
+  type BusinessDnaRuntime,
+  type BusinessDnaRuntimeDeps,
+} from './runtime.js';
 
 /** Re-export aggregate interfaces at package root for convenience. */
 export type { Organization } from './organization/types.js';
@@ -62,6 +75,12 @@ export type { Role } from './role/types.js';
 export type { Permission } from './permission/types.js';
 /** Schema-aligned alias — AI Agent in Business DNA schema. */
 export type { AiAgent } from './agent/index.js';
+export type { BusinessProfile, LegalEntity } from './business-profile/types.js';
+export type { VisionMission, StrategicObjective } from './vision-mission/types.js';
+export type { BusinessDnaProfile, IdealCustomerProfile, Persona, Positioning, ValueProposition, ToneOfVoice, BrandRule, CompetitiveAdvantage } from './dna/types.js';
+export type { MarketModel, OperatingMarket } from './market/types.js';
+export type { Competitor } from './competitor/types.js';
+export type { ProductBundle } from './product/types.js';
 
 /** Re-export repository ports at package root for convenience. */
 export type { OrganizationRepository } from './organization/repository.js';
@@ -84,3 +103,13 @@ export type { AssetRepository } from './asset/repository.js';
 export type { AgentRepository } from './agent/repository.js';
 export type { RoleRepository } from './role/repository.js';
 export type { PermissionRepository } from './permission/repository.js';
+export type { BusinessProfileRepository } from './business-profile/repository.js';
+export type { VisionMissionRepository } from './vision-mission/repository.js';
+export type { BusinessDnaProfileRepository } from './dna/repository.js';
+export type { MarketModelRepository } from './market/repository.js';
+export type { CompetitorRepository } from './competitor/repository.js';
+export type { ProductBundleRepository } from './product/repository.js';
+
+export type { BusinessDnaQueries } from './queries/business-dna-queries.js';
+export type { BusinessDnaDomainEvent } from './events/business-dna-events.js';
+export { BUSINESS_DNA_EVENT_NAMES } from './events/business-dna-events.js';
