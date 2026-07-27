@@ -41,7 +41,10 @@ export type AssignmentStatus =
   | 'in_progress'
   | 'blocked'
   | 'completed'
+  | 'failed'
   | 'cancelled';
+
+export type AssignmentPriority = 'critical' | 'high' | 'normal' | 'low';
 
 /** Assignment of a runtime task to a workforce worker. */
 export interface TaskAssignment extends TenantAuditableEntity<TaskAssignmentId> {
@@ -49,7 +52,7 @@ export interface TaskAssignment extends TenantAuditableEntity<TaskAssignmentId> 
   readonly workerId: WorkerId;
   readonly assignedByWorkerId?: WorkerId;
   readonly status: AssignmentStatus;
-  readonly priority: 'critical' | 'high' | 'normal' | 'low';
+  readonly priority: AssignmentPriority;
   readonly assignedAt: Timestamp;
   readonly dueAt?: Timestamp;
   readonly completedAt?: Timestamp;

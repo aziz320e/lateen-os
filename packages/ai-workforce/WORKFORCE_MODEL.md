@@ -91,6 +91,17 @@ stateDiagram-v2
 | `suspended` | Governance hold |
 | `offboarded` | Removed from active workforce |
 
+### Real implementation: `WorkerLifecycleService`
+
+`worker/lifecycle.impl.ts`'s `createWorkerLifecycle()` implements this as a real, guarded state machine over `WorkerStatus` (the diagram above is the conceptual model; `WorkerStatus` is the concrete, persisted field it drives):
+
+```
+draft ──(hire)──> onboarding ──(activate)──> active ──(suspend)──> suspended ──(resume)──> active
+active ──> busy / away / paused ──(retire, from any non-terminal state)──> offboarded ──> archived
+```
+
+Five guarded operations — `hire`, `activate`, `suspend`, `resume`, `retire` — each reject a transition the table above doesn't allow, throwing `InvalidWorkerTransitionError`. `canTransitionWorker(from, to)` is exported standalone for inspection. Every transition publishes its corresponding `worker.*` event on `WorkforceEventBus`.
+
 ---
 
 ## Delegation Flow
@@ -171,7 +182,7 @@ OKR hierarchy for measuring worker and team outcomes over defined periods.
 
 ## Query port
 
-`WorkforceQueries` provides read-side access:
+`WorkforceQueries` is the original contract for read-side access:
 
 | Method | Returns |
 | ------ | ------- |
@@ -181,6 +192,19 @@ OKR hierarchy for measuring worker and team outcomes over defined periods.
 | `findPerformance()` | Metrics, scores, task statistics |
 | `findAssignments()` | Task assignments by worker or task |
 | `findAvailability()` | Capacity snapshots for scheduling |
+
+### Real implementation: `WorkforceRuntimeQueries`
+
+`queries/runtime-queries.impl.ts`'s `createWorkforceRuntimeQueries()` is the real query layer exposed by `createWorkforceRuntime()` — composed purely over repositories and engines, never returning a repository itself:
+
+| Method | Returns |
+| ------ | ------- |
+| `findWorkers()` | Workers filtered by status / workforce type / department |
+| `findAvailableWorkers()` | Workers with `available` capacity, optionally filtered by role |
+| `findAssignments()` | Real `TaskAssignment` records by worker / task / status |
+| `findCapabilities()` | The organization's skill catalog |
+| `findPerformance()` | Real `PerformanceMetrics` snapshots + computed `WorkerScore` + `TaskStatistics` |
+| `findCapacity()` | Real-time `AvailabilitySnapshot`s from the Capacity Engine |
 
 ---
 

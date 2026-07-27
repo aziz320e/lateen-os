@@ -13,6 +13,7 @@ import type {
   WorkerSkillId,
 } from '../shared/identifiers.js';
 import type { ScoreValue, Timestamp, WorkforceType } from '../shared/primitives.js';
+import type { ToolAccessGrant, WorkerCertification } from '../skills/types.js';
 
 export type CapabilityReferenceId = Identifier;
 
@@ -99,6 +100,8 @@ export interface AIWorker extends TenantAuditableEntity<WorkerId> {
   readonly roles: readonly WorkerRole[];
   readonly capabilities: readonly WorkerCapability[];
   readonly skills: readonly WorkerSkill[];
+  readonly certifications: readonly WorkerCertification[];
+  readonly toolAccess: readonly ToolAccessGrant[];
   readonly availability: WorkerAvailability;
   readonly status: WorkerStatus;
   readonly lifecycle: WorkerLifecycle;

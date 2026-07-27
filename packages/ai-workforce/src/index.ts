@@ -23,6 +23,14 @@ export * as availability from './availability/index.js';
 export * as notifications from './notifications/index.js';
 export * as governance from './governance/index.js';
 export * as queries from './queries/index.js';
+export * as assignment from './assignment/index.js';
+export * as events from './events/index.js';
+
+export {
+  createWorkforceRuntime,
+  type WorkforceRuntime,
+  type WorkforceRuntimeDeps,
+} from './runtime.js';
 
 export type {
   AIWorker,
@@ -44,7 +52,14 @@ export type {
 
 export type { WorkforceOrgUnit, ReportingLine } from './organization/types.js';
 
-export type { SkillDefinition, SkillProficiency } from './skills/types.js';
+export type {
+  SkillDefinition,
+  SkillProficiency,
+  WorkerCertification,
+  ToolAccessGrant,
+  ToolAccessScope,
+  CapabilityRequirement,
+} from './skills/types.js';
 
 export type { AITeam, TeamMember, TeamLead } from './teams/types.js';
 
@@ -85,6 +100,12 @@ export type {
 } from './governance/types.js';
 
 export type { WorkforceQueries } from './queries/workforce-queries.js';
+export type { WorkforceRuntimeQueries } from './queries/runtime-queries.js';
+
+export type { AssignmentCriteria } from './assignment/types.js';
+
+export type { WorkforceDomainEvent } from './events/workforce-events.js';
+export { WORKFORCE_EVENT_NAMES } from './events/workforce-events.js';
 
 export type { OrganizationId } from './shared/identifiers.js';
 

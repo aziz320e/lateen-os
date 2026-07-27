@@ -6,7 +6,7 @@
 
 `@lateen-os/ai-workforce` is the **canonical organizational layer for digital employees** in Lateen OS. It sits above `@lateen-os/ai-runtime` and defines how AI workers are registered, organized, delegated, supervised, measured, and governed.
 
-The package defines models and ports only — no LLM integration, persistence, UI, or API.
+The Worker Lifecycle, Worker Registry, Capability Engine, Capacity Engine, Assignment Engine, Performance Engine, query layer, and event bus are **real, deterministic, in-memory implementations** — see `runtime.ts`'s `createWorkforceRuntime()` for the composition root, and each module's `*.impl.ts` files. The remaining modules (organization, teams, delegation, collaboration conversations, supervision, goals, notifications, governance) remain models and ports only — no LLM integration, persistence, UI, or API.
 
 ---
 
@@ -36,22 +36,26 @@ Every AI worker links:
 
 ## Module map
 
-| Module | Types | Repository |
-| ------ | ----- | ---------- |
-| `worker` | AIWorker, WorkerProfile, WorkerRole, WorkerStatus, WorkerCapability, WorkerSkill, WorkerAvailability | WorkerRepository |
-| `registry` | WorkerRegistry, WorkerRegistration, WorkerDescriptor | WorkerRegistrationRepository, WorkerRegistryRepository |
-| `organization` | WorkforceOrgUnit, ReportingLine | WorkforceOrgUnitRepository |
-| `skills` | SkillDefinition, SkillProficiency | SkillDefinitionRepository |
-| `teams` | AITeam, TeamMember, TeamLead | TeamRepository, TeamMemberRepository |
-| `delegation` | DelegationRequest, DelegationRule, DelegationResult | DelegationRequestRepository, DelegationRuleRepository |
-| `collaboration` | Conversation, TaskAssignment, SharedContext | ConversationRepository, TaskAssignmentRepository, SharedContextRepository |
-| `supervision` | Supervisor, Review, Escalation | SupervisorRepository, ReviewRepository, EscalationRepository |
-| `goals` | Goal, Objective, KeyResult | GoalRepository, ObjectiveRepository, KeyResultRepository |
-| `performance` | PerformanceMetrics, WorkerScore, TaskStatistics | PerformanceMetricsRepository |
-| `availability` | AvailabilitySchedule, AvailabilitySlot, AvailabilitySnapshot | AvailabilityScheduleRepository |
-| `notifications` | WorkforceNotification | WorkforceNotificationRepository |
-| `governance` | ApprovalRequirement, ComplianceCheck, AuditRecord | ApprovalRequirementRepository, ComplianceCheckRepository, AuditRecordRepository |
-| `queries` | WorkforceQueries | — |
+| Module | Types | Repository | Real? |
+| ------ | ----- | ---------- | ----- |
+| `worker` | AIWorker, WorkerProfile, WorkerRole, WorkerStatus, WorkerCapability, WorkerSkill, WorkerAvailability, WorkerCertification, ToolAccessGrant | WorkerRepository | ✅ `WorkerLifecycleService` (hire/activate/suspend/resume/retire) |
+| `registry` | WorkerRegistry, WorkerRegistration, WorkerDescriptor | WorkerRegistrationRepository, WorkerRegistryRepository | ✅ `WorkerRegistryService` |
+| `organization` | WorkforceOrgUnit, ReportingLine | WorkforceOrgUnitRepository | contracts only |
+| `skills` | SkillDefinition, SkillProficiency, WorkerCertification, ToolAccessGrant, CapabilityRequirement | SkillDefinitionRepository | ✅ `CapabilityEngine` |
+| `teams` | AITeam, TeamMember, TeamLead | TeamRepository, TeamMemberRepository | contracts only |
+| `delegation` | DelegationRequest, DelegationRule, DelegationResult | DelegationRequestRepository, DelegationRuleRepository | contracts only |
+| `collaboration` | Conversation, TaskAssignment, SharedContext | ConversationRepository, TaskAssignmentRepository, SharedContextRepository | `TaskAssignment`/`TaskAssignmentRepository` real; Conversation/SharedContext contracts only |
+| `supervision` | Supervisor, Review, Escalation | SupervisorRepository, ReviewRepository, EscalationRepository | contracts only |
+| `goals` | Goal, Objective, KeyResult | GoalRepository, ObjectiveRepository, KeyResultRepository | contracts only |
+| `performance` | PerformanceMetrics, WorkerScore, TaskStatistics | PerformanceMetricsRepository | ✅ `PerformanceEngine` |
+| `availability` | AvailabilitySchedule, AvailabilitySlot, AvailabilitySnapshot | AvailabilityScheduleRepository | ✅ `CapacityEngine` (operates on `AIWorker.availability`) |
+| `notifications` | WorkforceNotification | WorkforceNotificationRepository | contracts only |
+| `governance` | ApprovalRequirement, ComplianceCheck, AuditRecord | ApprovalRequirementRepository, ComplianceCheckRepository, AuditRecordRepository | contracts only |
+| `assignment` | AssignmentCriteria | — (uses `collaboration`'s `TaskAssignmentRepository`) | ✅ `AssignmentEngine` — deterministic selection, no AI/LLM |
+| `queries` | WorkforceQueries (original contract), WorkforceRuntimeQueries | — | ✅ `WorkforceRuntimeQueries` |
+| `events` | WorkforceEventMap, WorkforceDomainEvent | — | ✅ `WorkforceEventBus` |
+
+`runtime.ts` is the composition root: `createWorkforceRuntime()` wires every real in-memory repository into the six real engines/services above and exposes only `registry`, `lifecycle`, `assignment`, `capacity`, `performance`, `capabilities`, `queries`, and `events` — repositories are never part of the returned surface.
 
 ---
 
