@@ -2233,6 +2233,43 @@ importers:
         specifier: ^3.0.5
         version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0)
 
+  packages/observability-engine:
+    dependencies:
+      '@lateen-os/ai-compliance-engine':
+        specifier: workspace:*
+        version: link:../ai-compliance-engine
+      '@lateen-os/ai-governance-engine':
+        specifier: workspace:*
+        version: link:../ai-governance-engine
+      '@lateen-os/ai-runtime':
+        specifier: workspace:*
+        version: link:../ai-runtime
+      '@lateen-os/ai-security-engine':
+        specifier: workspace:*
+        version: link:../ai-security-engine
+      '@lateen-os/analytics-engine':
+        specifier: workspace:*
+        version: link:../analytics-engine
+      '@lateen-os/communication-hub':
+        specifier: workspace:*
+        version: link:../communication-hub
+      '@lateen-os/shared-kernel':
+        specifier: workspace:*
+        version: link:../shared-kernel
+      '@lateen-os/workflow-engine':
+        specifier: workspace:*
+        version: link:../workflow-engine
+    devDependencies:
+      '@lateen-os/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.5
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.1)(jiti@2.7.0)(tsx@4.23.1)(yaml@2.9.0)
+
   packages/sales-engine:
     dependencies:
       '@lateen-os/business-dna':
