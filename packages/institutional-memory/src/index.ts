@@ -23,9 +23,16 @@ export * as template from './template/index.js';
 export * as document from './document/index.js';
 export * as timeline from './timeline/index.js';
 export * as queries from './queries/index.js';
+export * as events from './events/index.js';
+
+export {
+  createInstitutionalMemoryRuntime,
+  type InstitutionalMemoryRuntime,
+  type InstitutionalMemoryRuntimeDeps,
+} from './runtime.js';
 
 export type { InstitutionalMemory } from './memory/types.js';
-export type { KnowledgeEntry, KnowledgeType } from './knowledge/types.js';
+export type { KnowledgeEntry, KnowledgeEntryVersion, KnowledgeType, KnowledgeEntryStatus } from './knowledge/types.js';
 export type { DecisionRecord } from './decision/types.js';
 export type { LessonLearned } from './lesson/types.js';
 export type { MeetingRecord } from './meeting/types.js';
@@ -50,6 +57,10 @@ export type {
 } from './confidence/types.js';
 
 export type { MemoryQueries } from './queries/memory-queries.js';
+export type { KnowledgeRuntimeQueries } from './queries/knowledge-runtime-queries.js';
+
+export type { InstitutionalMemoryDomainEvent } from './events/institutional-memory-events.js';
+export { INSTITUTIONAL_MEMORY_EVENT_NAMES } from './events/institutional-memory-events.js';
 
 export type { InstitutionalMemoryRepository } from './memory/repository.js';
 export type { KnowledgeEntryRepository } from './knowledge/repository.js';
@@ -62,10 +73,12 @@ export type { ResearchRecordRepository } from './research/repository.js';
 export type { TemplateRepository } from './template/repository.js';
 export type { DocumentReferenceRepository } from './document/repository.js';
 export type { MemoryTimelineRepository } from './timeline/repository.js';
+export type { KnowledgeEntryVersionRepository } from './knowledge/repository.js';
 
 export type {
   InstitutionalMemoryId,
   KnowledgeEntryId,
+  KnowledgeEntryVersionId,
   DecisionRecordId,
   LessonLearnedId,
   MeetingRecordId,

@@ -6,7 +6,7 @@
 
 `@lateen-os/institutional-memory` is the **canonical Institutional Memory model** for Lateen OS — long-term organizational knowledge consumed by Proactive AI (Architecture v1.0 § Proactive AI monitoring inputs).
 
-The package defines domain models and contracts only. No persistence, vector database, embeddings, or AI logic.
+The `knowledge` module's Memory/Knowledge Lifecycle, Memory Versioning, Memory Search, Knowledge Relationships, Knowledge Validation, Retention Engine, query layer, and event bus are **real, deterministic, in-memory implementations** — see `runtime.ts`'s `createInstitutionalMemoryRuntime()` for the composition root, and `knowledge/*.impl.ts` for each engine. The other 10 aggregates (`memory`, `decision`, `lesson`, `meeting`, `incident`, `playbook`, `research`, `template`, `document`, `timeline`) remain domain models and contracts only. No persistence adapter, vector database, embeddings, or AI logic anywhere in this package.
 
 ---
 
@@ -22,25 +22,28 @@ The package defines domain models and contracts only. No persistence, vector dat
 
 ## Module map
 
-| Module | Responsibility |
-| ------ | -------------- |
-| `shared/` | IDs, primitives, entity base, events, repository ports |
-| `classification/` | MemoryCategory, ImportanceLevel, Visibility, RetentionPolicy |
-| `confidence/` | ConfidenceScore, Evidence, EvidenceSource |
-| `memory/` | InstitutionalMemory aggregate |
-| `knowledge/` | KnowledgeEntry + KnowledgeType taxonomy |
-| `decision/` | DecisionRecord |
-| `lesson/` | LessonLearned |
-| `meeting/` | MeetingRecord + ActionItem |
-| `incident/` | IncidentRecord |
-| `playbook/` | Playbook + PlaybookStep |
-| `research/` | ResearchRecord |
-| `template/` | Template + TemplateVariable |
-| `document/` | DocumentReference + RelatedEntityRef |
-| `timeline/` | TimelineEvent, MemoryTimeline |
-| `queries/` | MemoryQueries port |
+| Module | Responsibility | Real? |
+| ------ | -------------- | ----- |
+| `shared/` | IDs, primitives, entity base, events, repository ports, `id.ts`/`errors.ts` helpers | — |
+| `classification/` | MemoryCategory, ImportanceLevel, Visibility, RetentionPolicy | contracts only |
+| `confidence/` | ConfidenceScore, Evidence, EvidenceSource | contracts only |
+| `memory/` | InstitutionalMemory aggregate | contracts only |
+| `knowledge/` | KnowledgeEntry + KnowledgeType taxonomy (now 14 types incl. `sop`/`playbook`/`faq`/`documentation`) | ✅ `KnowledgeLifecycle`, `KnowledgeSearchEngine`, `KnowledgeRelationshipService`, `KnowledgeValidationEngine`, `RetentionEngine` |
+| `decision/` | DecisionRecord | contracts only |
+| `lesson/` | LessonLearned | contracts only |
+| `meeting/` | MeetingRecord + ActionItem | contracts only |
+| `incident/` | IncidentRecord | contracts only |
+| `playbook/` | Playbook + PlaybookStep | contracts only |
+| `research/` | ResearchRecord | contracts only |
+| `template/` | Template + TemplateVariable | contracts only |
+| `document/` | DocumentReference + RelatedEntityRef | contracts only |
+| `timeline/` | TimelineEvent, MemoryTimeline | contracts only |
+| `queries/` | Original `MemoryQueries` port (contract) + real `KnowledgeRuntimeQueries` | ✅ `KnowledgeRuntimeQueries` |
+| `events/` | Typed `InstitutionalMemoryEventMap` | ✅ `InstitutionalMemoryEventBus` |
 
-Each aggregate module: `types`, `value-objects`, `events`, `repository`, `index`.
+`runtime.ts` is the composition root: `createInstitutionalMemoryRuntime()` wires the real in-memory `KnowledgeEntryRepository` and `KnowledgeEntryVersionRepository` into every engine above and exposes only `lifecycle`, `search`, `relationships`, `validation`, `retention`, `queries`, and `events` — repositories are never part of the returned surface.
+
+Each aggregate module: `types`, `value-objects`, `events`, `repository`, `index` — `knowledge/` additionally has `repository.impl.ts`, `lifecycle.impl.ts`, `search.impl.ts`, `relationships.impl.ts`, `validation.impl.ts`, and `retention.impl.ts`.
 
 ---
 
@@ -212,7 +215,7 @@ Namespace exports for each module; root re-exports for aggregates, classificatio
 
 | Artifact | Count |
 | -------- | ----- |
-| Aggregates | 11 |
-| Knowledge types | 10 |
-| Query methods | 11 |
-| Domain event sets | 11 |
+| Aggregates | 11 (1 real: `knowledge`; 10 contracts only) |
+| Knowledge types | 14 (10 original + `sop`, `playbook`, `faq`, `documentation`) |
+| Query methods | 11 (`MemoryQueries` contract) + 8 (`KnowledgeRuntimeQueries`, real) |
+| Domain event sets | 11 (contracts) + 1 (`InstitutionalMemoryEventMap`, real — 8 required events) |

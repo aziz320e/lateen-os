@@ -63,3 +63,6 @@ export type PlaybookStepId = Identifier;
 
 /** Evidence record identifier. */
 export type EvidenceId = Identifier;
+
+/** Immutable knowledge entry revision identifier. */
+export type KnowledgeEntryVersionId = Identifier;
