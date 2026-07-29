@@ -1,4 +1,4 @@
-# @lateen-os/marketplace
+# @lateen-os/marketplace-engine
 
 Marketplace / Extension Platform — the Extension Registry, Plugin Registry, Package Registry, Extension Sandbox, Extension Configuration, Extension Events, and the Marketplace Catalog for Lateen OS.
 
@@ -56,7 +56,7 @@ Every optional collaborator degrades to a documented no-op (`null`/`[]`) when no
 ## Usage
 
 ```typescript
-import { createMarketplaceRuntime } from '@lateen-os/marketplace';
+import { createMarketplaceRuntime } from '@lateen-os/marketplace-engine';
 
 const marketplace = createMarketplaceRuntime();
 
@@ -135,8 +135,8 @@ See [MARKETPLACE_MODEL.md](./MARKETPLACE_MODEL.md) and [ARCHITECTURE.md](./ARCHI
 ## Verification
 
 ```bash
-pnpm --filter @lateen-os/marketplace build
-pnpm --filter @lateen-os/marketplace typecheck
-pnpm --filter @lateen-os/marketplace test
-pnpm --filter @lateen-os/marketplace lint
+pnpm --filter @lateen-os/marketplace-engine build
+pnpm --filter @lateen-os/marketplace-engine typecheck
+pnpm --filter @lateen-os/marketplace-engine test
+pnpm --filter @lateen-os/marketplace-engine lint
 ```

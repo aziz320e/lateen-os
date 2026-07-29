@@ -4,7 +4,7 @@
 
 ## Purpose
 
-`@lateen-os/marketplace` is the extension platform for Lateen OS — the Extension Registry, Plugin Registry, Package Registry, Extension Sandbox, Extension Configuration, Extension Events, and the Marketplace Catalog. Every capability is a **real, deterministic, in-memory implementation** — there is no contracts-only scaffold in this package; it was built directly as a real runtime (see `runtime.ts`'s `createMarketplaceRuntime()`).
+`@lateen-os/marketplace-engine` is the extension platform for Lateen OS — the Extension Registry, Plugin Registry, Package Registry, Extension Sandbox, Extension Configuration, Extension Events, and the Marketplace Catalog. Every capability is a **real, deterministic, in-memory implementation** — there is no contracts-only scaffold in this package; it was built directly as a real runtime (see `runtime.ts`'s `createMarketplaceRuntime()`).
 
 ---
 
@@ -77,7 +77,7 @@ flowchart BT
     APP[Applications]
   end
 
-  subgraph mp ["@lateen-os/marketplace"]
+  subgraph mp ["@lateen-os/marketplace-engine"]
     IDX[index.ts]
     RT[runtime.ts]
     PKG[package-registry]
@@ -200,7 +200,7 @@ import {
   type PackageVersion,
   type SandboxProfile,
   type CatalogEntry,
-} from '@lateen-os/marketplace';
+} from '@lateen-os/marketplace-engine';
 ```
 
 Namespace exports for each module; root re-exports for aggregate interfaces, service ports, pure functions, and the composition root. Repositories are exported as **types only** (for advanced/testing use) — never as constructed instances outside `createMarketplaceRuntime()`.
