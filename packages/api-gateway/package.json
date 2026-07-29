@@ -1,0 +1,50 @@
+{
+  "name": "@lateen-os/api-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "description": "API Gateway — framework-agnostic API/route/endpoint/version registries, middleware pipeline, authentication/authorization, rate limiting, quota management, validation, request context, metrics, service discovery, and a deterministic runtime dispatcher for Lateen OS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  },
+  "dependencies": {
+    "@lateen-os/ai-compliance-engine": "workspace:*",
+    "@lateen-os/ai-governance-engine": "workspace:*",
+    "@lateen-os/ai-runtime": "workspace:*",
+    "@lateen-os/ai-security-engine": "workspace:*",
+    "@lateen-os/analytics-engine": "workspace:*",
+    "@lateen-os/business-dna": "workspace:*",
+    "@lateen-os/communication-hub": "workspace:*",
+    "@lateen-os/crm-engine": "workspace:*",
+    "@lateen-os/customer-success-engine": "workspace:*",
+    "@lateen-os/finance-engine": "workspace:*",
+    "@lateen-os/hr-engine": "workspace:*",
+    "@lateen-os/inventory-engine": "workspace:*",
+    "@lateen-os/marketing-engine": "workspace:*",
+    "@lateen-os/observability-engine": "workspace:*",
+    "@lateen-os/project-management-engine": "workspace:*",
+    "@lateen-os/sales-engine": "workspace:*",
+    "@lateen-os/shared-kernel": "workspace:*",
+    "@lateen-os/workflow-engine": "workspace:*"
+  }
+}
