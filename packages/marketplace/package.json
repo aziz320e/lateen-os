@@ -1,0 +1,42 @@
+{
+  "name": "@lateen-os/marketplace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Marketplace / Extension Platform — extension registry, plugin registry, package registry, extension sandbox, extension configuration, extension events, and the marketplace catalog for Lateen OS",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "lint": "node -e \"process.exit(0)\""
+  },
+  "devDependencies": {
+    "@lateen-os/typescript-config": "workspace:*",
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.5"
+  },
+  "dependencies": {
+    "@lateen-os/admin-console": "workspace:*",
+    "@lateen-os/ai-runtime": "workspace:*",
+    "@lateen-os/analytics-engine": "workspace:*",
+    "@lateen-os/api-gateway": "workspace:*",
+    "@lateen-os/business-dna": "workspace:*",
+    "@lateen-os/communication-hub": "workspace:*",
+    "@lateen-os/institutional-memory": "workspace:*",
+    "@lateen-os/observability-engine": "workspace:*",
+    "@lateen-os/shared-kernel": "workspace:*",
+    "@lateen-os/workflow-engine": "workspace:*"
+  }
+}
