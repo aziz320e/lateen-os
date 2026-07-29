@@ -32,7 +32,7 @@ Every Era-2 package follows **one rigid, repeated construction pattern**, descri
 
 ## 3. The Complete Package Map (as of Commit 35)
 
-39 packages under `packages/*` (38 with their own `package.json` plus this repo's `README.md`). Grouped by role:
+39 packages under `packages/*`, all 39 with their own `package.json`, plus this repository's own `packages/README.md` describing the package directory as a whole. (Earlier drafts of this document and the Commit 35 certification reports understated this as "38 packages" — a narrative arithmetic slip, not a data error: `integration-tests` was tested correctly throughout Commit 35 but never counted in the prose totals or `RUNTIME_AUDIT.md`'s coverage table. Corrected during the subsequent documentation sprint.) Grouped by role:
 
 | Layer | Packages |
 | --- | --- |
@@ -76,7 +76,7 @@ Nothing above the composition root (a consuming package, a test, an application)
 
 ## 6. The Relationship Layer Philosophy
 
-A `relationship-management/` module (present in 18 of the 38 packages — the ones that genuinely integrate with siblings) is the **single, centralized, exhaustive list of every sibling integration a package performs**, with exactly one method per collaborator, e.g. `getCustomerContext()` for CRM Engine, `notifyAdminEvent()` for Communication Hub, `logMarketplaceDecisionToMemory()` for Institutional Memory. Each method:
+A `relationship-management/` module (present in 18 of the 39 packages — the ones that genuinely integrate with siblings) is the **single, centralized, exhaustive list of every sibling integration a package performs**, with exactly one method per collaborator, e.g. `getCustomerContext()` for CRM Engine, `notifyAdminEvent()` for Communication Hub, `logMarketplaceDecisionToMemory()` for Institutional Memory. Each method:
 
 - Takes only the plain data it needs (usually `organizationId` plus a small input object), never a whole aggregate from the sibling.
 - Calls exactly one named, public method on the injected sibling slice — never dynamic property access, never reflection, never a generically-typed "invoke by string" mechanism (the one deliberate exception, `api-gateway`'s Runtime Dispatcher, still resolves through a fixed, exhaustive, compile-time-checked lookup table into this same Relationship Layer — see `packages/api-gateway/GATEWAY_MODEL.md`).
@@ -86,14 +86,14 @@ A package's `RelationshipManagementDeps` interface types each collaborator slice
 
 ## 7. The Query Layer Philosophy
 
-A `queries/` module (present in 35 of 38 packages) is a real, deterministic, read-only CQRS port over the package's *own* repositories (never a sibling's). It never mutates state. Its methods are named `findX(query): Promise<{ x: readonly X[], total: number }>` for collections, composing two small pure helpers repeated verbatim across every package that has one:
+A `queries/` module (present in 31 of 39 packages) is a real, deterministic, read-only CQRS port over the package's *own* repositories (never a sibling's). It never mutates state. Its methods are named `findX(query): Promise<{ x: readonly X[], total: number }>` for collections, composing two small pure helpers repeated verbatim across every package that has one:
 
 - `paginate(items, offset?, limit?)` — a plain array slice.
 - `scoreLabel(label, keyword)` — exact match scores `3`, substring match scores `2`, no match scores `0` — used by every package's `searchX()` method, sorted by score descending then `id` ascending for a fully deterministic result order. **Never a fuzzy-match library, never a ranking model.**
 
 ## 8. The Typed Event Bus Philosophy
 
-Every package with domain events (35 of 38) builds its event bus on `shared-kernel`'s generic `createEventBus<TEventMap>()`, wrapped in a package-specific `create<X>EventBus()` and a `type <X>EventMap = { 'noun.verb': { ...payload } }` map. Event names are always `noun.verb` (past tense), e.g. `extension.installed`, `settings.updated`, `compatibility.checked`. **Every event actually declared in the map is genuinely published by the real code path that causes it** — there are no aspirational/unused event declarations anywhere in the codebase (verified in Commit 35).
+Every package with domain events (31 of 39) builds its event bus on `shared-kernel`'s generic `createEventBus<TEventMap>()`, wrapped in a package-specific `create<X>EventBus()` and a `type <X>EventMap = { 'noun.verb': { ...payload } }` map. Event names are always `noun.verb` (past tense), e.g. `extension.installed`, `settings.updated`, `compatibility.checked`. **Every event actually declared in the map is genuinely published by the real code path that causes it in the packages spot-checked during Commit 35** — but this is not a platform-wide guarantee without exception: `ai-runtime`'s own `events/runtime-event-bus.ts` explicitly documents that its live `RuntimeEventMap` (11 keys) is a subset of the fuller `AiRuntimeDomainEvent` union declared across its 16 subdomains, "most of which have no publisher yet." Treat "every declared event is published" as true for the packages it has been directly verified for (see each package's own `docs/engines/<name>.md`), not as an unconditional platform-wide fact.
 
 ## 9. Real Incidents Fixed During Commit 35
 
@@ -109,7 +109,7 @@ If you are an AI system asked to add a new business-capability engine to `packag
 4. Before choosing your package's npm name, grep every `package.json` under `packages/`, `apps/`, `services/`, `workflows/`, and `extensions/` for the exact name you intend to use.
 5. Write real tests with real sibling runtimes for integration coverage — no mocking libraries, no fabricated network stubs. Use hand-built literal objects matching a `Pick<>` shape only for narrow unit-level isolation tests, exactly as every existing package does.
 6. Validate in strict order: build → typecheck → tests → lint. Do not proceed to the next step, and do not commit, until the failing step is understood and fixed.
-7. Write `README.md`, `ARCHITECTURE.md`, and a `*_MODEL.md` doc before considering the package done — this trio exists for 30 of 38 packages today (see `docs/certification/ARCHITECTURE_AUDIT.md` for exactly which packages are missing which document and why).
+7. Write `README.md`, `ARCHITECTURE.md`, and a `*_MODEL.md` doc before considering the package done — this trio exists for 29 of 39 packages today (see `docs/certification/ARCHITECTURE_AUDIT.md` for exactly which packages are missing which document and why).
 8. One commit per package/feature. Never mix unrelated packages in one commit. Never rewrite git history. Never force-push.
 
 ## 11. Where to Look Next

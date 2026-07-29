@@ -1,6 +1,8 @@
 # Testing Audit — Lateen OS
 
-> Part of Commit 35 — Enterprise Platform Certification & Stabilization. Scope: all 38 `packages/*`. Validation order per the task mandate: **1. build → 2. typecheck → 3. tests → 4. lint.**
+> Part of Commit 35 — Enterprise Platform Certification & Stabilization. Scope: all 39 `packages/*`. Validation order per the task mandate: **1. build → 2. typecheck → 3. tests → 4. lint.**
+>
+> **Correction (subsequent documentation sprint)**: this report originally stated ratios out of 38; the correct denominator is 39. The underlying per-package results and the test table below were always complete and correct (they already include `integration-tests`) — only the summary ratios were mislabeled.
 
 ## Method and the workspace-root blocker
 
@@ -10,19 +12,19 @@ Per this commit's explicit instruction to document, not redesign, unrelated pre-
 
 ## Results
 
-### Build — 37 of 38 `BUILD_OK`
+### Build — 38 of 39 `BUILD_OK`
 
 Every package with a `build` script compiled successfully. `typescript-config` has no `build` script (`no-build-script`) — correct, since it is a pure shared `tsconfig.json` package with no runtime source to compile.
 
-### Typecheck — 37 of 38 `TYPECHECK_OK`
+### Typecheck — 38 of 39 `TYPECHECK_OK`
 
 Every package with a `typecheck` script passed `tsc --noEmit` with zero type errors. `typescript-config` has no `typecheck` script (`no-typecheck-script`) — same reasoning as above.
 
-### Tests — 36 of 38 `TEST_OK`, **5,676 tests passing, 0 failing**
+### Tests — 37 of 39 `TEST_OK`, **5,676 tests passing, 0 failing**
 
 | Status | Count | Packages |
 | --- | --- | --- |
-| `TEST_OK` | 36 | all packages except the two below |
+| `TEST_OK` | 37 | all packages except the two below |
 | `no-test-script` | 2 | `capability-engine`, `typescript-config` |
 
 Full per-package test counts (test files / tests, all passing, zero failures across the entire run):
@@ -70,15 +72,15 @@ Full per-package test counts (test files / tests, all passing, zero failures acr
 
 `capability-engine` has no `test` script and no test files — it exports pure capability-definition/registration types and functions with no injected collaborators or state to exercise; this is recorded as a real gap in `KNOWN_TECHNICAL_DEBT.md` rather than excused, since (unlike `typescript-config`) it does contain real runtime logic. `typescript-config` correctly has no test script (no runtime code).
 
-### Lint — 37 of 38 `LINT_OK`
+### Lint — 38 of 39 `LINT_OK`
 
 Every package with a `lint` script passed. `typescript-config` has no `lint` script (`no-lint-script`) — same reasoning as build/typecheck. **Note**: every package's `lint` script (with the sole exception of `typescript-config`, which has none) is the identical no-op stub `node -e "process.exit(0)"` — there is no real static-analysis linter (ESLint or equivalent) configured anywhere in `packages/*`. "Lint passing" therefore certifies only that the placeholder script runs successfully, not that any static-analysis rule set was actually enforced. This is recorded as a platform-wide finding in `KNOWN_TECHNICAL_DEBT.md` — introducing a real linter is a genuine tooling decision (rule set, config, existing-violation triage) outside this commit's "minimal safe fixes" mandate.
 
 ## Passed Checks
 
-- **Zero test failures** across 5,676 real tests in 328 test files spanning 36 packages.
-- **Zero type errors** across all 37 packages with a typecheck script.
-- **Zero build failures** across all 37 packages with a build script.
+- **Zero test failures** across 5,676 real tests in 328 test files spanning 37 packages.
+- **Zero type errors** across all 38 packages with a typecheck script.
+- **Zero build failures** across all 38 packages with a build script.
 - The three `no-*-script` packages (`typescript-config` for all three; `capability-engine` for tests only) were independently confirmed to have a legitimate structural reason for the absence in each case (see above), rather than being silently skipped.
 
 ## Findings

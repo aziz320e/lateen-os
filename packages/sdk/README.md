@@ -138,7 +138,7 @@ pnpm exec lateen-sdk doctor
 
 **Runtime composition root (`system`):** `@lateen-os/shared-kernel`, `@lateen-os/ai-provider-hub`, `@lateen-os/decision-engine`, `@lateen-os/intelligence-engine`, `@lateen-os/ai-runtime`, `@lateen-os/ai-brain`, `@lateen-os/ceo-engine`.
 
-**`LateenSDK` (extension authoring):** wraps contracts from `@lateen-os/shared-kernel`, `@lateen-os/business-dna`, `@lateen-os/workflow-engine`, `@lateen-os/multi-agent`, `@lateen-os/ai-workforce`, `@lateen-os/ai-runtime`, `@lateen-os/ai-brain`.
+**`LateenSDK` (extension authoring):** does not itself import `@lateen-os/shared-kernel`, `@lateen-os/business-dna`, `@lateen-os/workflow-engine`, or `@lateen-os/multi-agent` despite this package declaring them as dependencies (see `docs/certification/DEPENDENCY_AUDIT.md` F2 for the unused-dependency finding). `@lateen-os/ai-runtime` and `@lateen-os/ai-brain` are genuinely used, but only inside `system/` (the `createLateen()` composition root above), not inside `LateenSDK`'s own modules.
 
 ## Documentation
 

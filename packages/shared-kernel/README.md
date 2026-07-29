@@ -48,6 +48,9 @@ import type { Specification } from '@lateen-os/shared-kernel/core';
 | `audit/` | AuditInfo, VersionInfo |
 | `tenant/` | TenantId, OrganizationId, BranchId |
 | `time/` | Timestamp, DateOnly, Clock port |
+| `events/` | `createEventBus<TEventMap>()` — the generic typed event bus every package's own `create<X>EventBus()` is built on |
+| `repository/` | `createInMemoryRepository()` — the generic tenant-scoped in-memory repository every package's `repository.impl.ts` is built on |
+| `observability/` | Logger, retry helper, tracing span primitives |
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for dependency rules and integration guidance.
 

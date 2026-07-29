@@ -27,7 +27,7 @@
 
 `identity/service.impl.ts`'s `IdentityService` (principal creation, secret-identity issuance) handles workload/service identity, not a role/permission/RBAC model — no `permission`, `role`, or `scope` construct exists in this file. Authorization/permission modeling for the platform is a separate concern (per `AI_PROJECT_CONTEXT.md`, likely `ai-governance-engine`/`admin-console`'s domain, not re-verified line-by-line in this pass). This is noted as a scope clarification, not a defect — the Identity service was not expected to also be an authorization engine.
 
-### F2 — No dedicated permission-boundary audit was performed for every one of the 38 packages
+### F2 — No dedicated permission-boundary audit was performed for every one of the 39 packages
 
 This audit concentrated evidence-gathering on the two packages that handle real cryptographic material (`api-gateway`, `ai-security-engine`) plus a platform-wide event-payload scan, per the certification's time-boxed "apply only architectural fixes" mandate. A full line-by-line authorization-boundary review of `admin-console`'s Identity Administration module and `ai-governance-engine`'s policy modules was not performed in this commit. This is disclosed here rather than silently omitted, per the "never invent issues, but never claim untested ground as certified" principle governing this report.
 

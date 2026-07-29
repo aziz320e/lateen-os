@@ -11,7 +11,7 @@
 ## 2. No real static-analysis linter configured anywhere in `packages/*`
 
 - **Priority: high** (silent — every package reports "lint passing" today, which could mask the absence).
-- **Detail**: `TESTING_AUDIT.md` F3. Every package's `lint` script (37 of 38; `typescript-config` has none) is the identical no-op stub `node -e "process.exit(0)"`.
+- **Detail**: `TESTING_AUDIT.md` F3. Every package's `lint` script (38 of 39; `typescript-config` has none) is the identical no-op stub `node -e "process.exit(0)"`.
 - **Fix**: introduce a real ESLint (or equivalent) configuration in its own dedicated commit, with time budgeted to triage existing violations before enabling it in CI.
 
 ## 3. `capability-engine` has no test suite
@@ -30,7 +30,7 @@
 ## 5. Composition-root naming inconsistency in four Era-1 packages
 
 - **Priority: low** (cosmetic; functionally equivalent).
-- **Packages**: `ai-brain` (`createBrain()`), `ai-provider-hub` (`createProviderHub()`), `ceo-engine` (`createCeoEngine()`), `extension-system` (`createExtensionSystem()`) — all should eventually be `createXRuntime()`.
+- **Packages**: `ai-brain` (`createBrainSystem()`), `ai-provider-hub` (`createAiProviderHub()`), `ceo-engine` (`createCEOEngine()`), `extension-system` (`createExtensionSystem()`) — all should eventually be `createXRuntime()`.
 - **Detail**: `ARCHITECTURE_AUDIT.md` F1, `RUNTIME_AUDIT.md` coverage table.
 - **Fix**: rename in a dedicated, consumer-audited commit (check for any existing importer of the old name first; consider a deprecated re-export during transition).
 
@@ -43,7 +43,7 @@
 ## 7. Documentation coverage gaps
 
 - **Priority: low.**
-- **Missing MODEL document**: `ai-provider-hub`, `capability-engine`, `extension-system`, `kernel`, `shared-kernel`.
+- **Missing MODEL document**: `capability-engine`, `extension-system`, `kernel`, `shared-kernel`. (`ai-provider-hub` was incorrectly listed here in the original Commit 35 report — it actually has a full doc trio, including `MODEL_CATALOG.md`; corrected during the subsequent documentation sprint.)
 - **Missing ARCHITECTURE.md and MODEL document**: `ceo-engine`, `sdk`, `integration-tests`.
 - **Missing all three (README/ARCHITECTURE/MODEL)**: `connector-base`, `integration-contracts`, `typescript-config` — for these three specifically, the absence is likely a legitimate structural exemption (thin contract-only or tooling-only packages with no runtime model), not true debt; a maintainer should confirm this per-package before authoring anything.
 - **Detail**: `ARCHITECTURE_AUDIT.md` F5.

@@ -1,6 +1,8 @@
 # Architecture Audit — Lateen OS
 
-> Part of Commit 35 — Enterprise Platform Certification & Stabilization. Scope: all 38 `packages/*`. Findings are derived from direct inspection of each package's folder structure, `runtime.ts` (or equivalent), `package.json`, and source imports — cross-referenced against `docs/handbook/03_CONSTITUTION.md` (line 139, the canonical structure rule) and `docs/AI_PROJECT_CONTEXT.md`.
+> Part of Commit 35 — Enterprise Platform Certification & Stabilization. Scope: all 39 `packages/*`. Findings are derived from direct inspection of each package's folder structure, `runtime.ts` (or equivalent), `package.json`, and source imports — cross-referenced against `docs/handbook/03_CONSTITUTION.md` (line 139, the canonical structure rule) and `docs/AI_PROJECT_CONTEXT.md`.
+>
+> **Correction (subsequent documentation sprint)**: this report originally stated the platform total as 38 packages; the correct count is 39 (`integration-tests` was omitted from the prose totals, though it was tested correctly in Commit 35). It also named three composition-root factories incorrectly: `ai-brain`'s real aggregating root is `createBrainSystem()` (not `createBrain()`, which is a real but narrower inner primitive requiring mandatory dependencies), `ai-provider-hub`'s is `createAiProviderHub()` (not `createProviderHub()`), and `ceo-engine`'s is `createCEOEngine()` (capitalized "CEO", not `createCeoEngine()`). All three corrected below.
 
 ## Method
 
@@ -10,7 +12,7 @@
 
 ## Passed Checks
 
-- **26 of 38 packages** (all Era-2 packages plus most of the mature Era-1 engines — `crm-engine`, `sales-engine`, `marketing-engine`, `finance-engine`, `hr-engine`, `inventory-engine`, `project-management-engine`, `customer-success-engine`, `document-management-engine`, `communication-hub`, `domain-graph`, `institutional-memory`, `business-dna`, `ai-workforce`'s query/event layers, `admin-console`, `marketplace`, `api-gateway`, and others) follow the `03_CONSTITUTION.md` line-139 structure exactly: `shared/`, `events/`, one folder per subdomain (`types.ts`/`repository.ts`/`repository.impl.ts`/`engine.impl.ts` or `service.impl.ts`/`index.ts`), `queries/`, `runtime.ts`.
+- **26 of 39 packages** (all Era-2 packages plus most of the mature Era-1 engines — `crm-engine`, `sales-engine`, `marketing-engine`, `finance-engine`, `hr-engine`, `inventory-engine`, `project-management-engine`, `customer-success-engine`, `document-management-engine`, `communication-hub`, `domain-graph`, `institutional-memory`, `business-dna`, `ai-workforce`'s query/event layers, `admin-console`, `marketplace`, `api-gateway`, and others) follow the `03_CONSTITUTION.md` line-139 structure exactly: `shared/`, `events/`, one folder per subdomain (`types.ts`/`repository.ts`/`repository.impl.ts`/`engine.impl.ts` or `service.impl.ts`/`index.ts`), `queries/`, `runtime.ts`.
 - **Zero repository leakage** through any package's public runtime type — confirmed for every package with a `runtime.ts` (see `DEPENDENCY_AUDIT.md` for method).
 - **Zero dynamic, untyped cross-package invocation** — the one deliberate exception, the API Gateway's Runtime Dispatcher, resolves sibling handlers through a compile-time-checked registry, not `any`-typed reflection or string-based dynamic dispatch.
 - **Deterministic design is upheld platform-wide**: every `create*` factory that needs time takes an injectable `now()`; no package was found calling `Date.now()`/`new Date()` directly inside business logic (only inside default-parameter fallbacks, which is the documented, injectable pattern); no package uses `Math.random()` for identifiers (IDs are either caller-supplied, counter-based, or — in `marketplace`'s package-registry signature — a real SHA-256 digest via Node's `crypto`).
@@ -24,9 +26,9 @@ Not every package's composition root is named `createXRuntime()` in `runtime.ts`
 
 | Package | Actual composition root |
 | --- | --- |
-| `ai-brain` | `createBrain()` |
-| `ai-provider-hub` | `createProviderHub()` |
-| `ceo-engine` | `createCeoEngine()` |
+| `ai-brain` | `createBrainSystem()` |
+| `ai-provider-hub` | `createAiProviderHub()` |
+| `ceo-engine` | `createCEOEngine()` |
 | `extension-system` | `createExtensionSystem()` |
 
 Each of these still returns a single object aggregating that package's services/queries/events — functionally equivalent to the Era-2 `createXRuntime()` convention — just under an earlier naming convention predating the Era-2 standardization documented in `AI_PROJECT_CONTEXT.md` §2. **Not renamed in Commit 35** (a rename of a public factory function is a breaking API change for any consumer already importing it, outside this commit's "minimal safe fixes only" mandate). Recorded here and in `KNOWN_TECHNICAL_DEBT.md` as a naming-consistency item for a future, dedicated (and properly consumer-checked) commit.
@@ -60,7 +62,7 @@ All 18 packages that do have a `relationship-management/` folder were verified t
 
 | Package | Missing |
 | --- | --- |
-| `ai-provider-hub`, `capability-engine`, `extension-system`, `kernel`, `shared-kernel` | MODEL document |
+| `capability-engine`, `extension-system`, `kernel`, `shared-kernel` | MODEL document |
 | `ceo-engine`, `sdk`, `integration-tests` | ARCHITECTURE.md and MODEL document |
 | `connector-base`, `integration-contracts`, `typescript-config` | All three (README/ARCHITECTURE/MODEL) |
 
@@ -83,5 +85,5 @@ Every package built under the sequential "Commit N: implement real X" Era-2 conv
 
 1. In a dedicated, consumer-audited commit, rename the four F1 composition roots to `createXRuntime()` (with the old export kept as a deprecated alias for one release if any consumer is found).
 2. In a dedicated refactor commit, extract the F4 packages' inline sibling calls into a proper `relationship-management/` module each, without changing behavior.
-3. Author the F5 genuine documentation gaps (`ai-provider-hub`, `capability-engine`, `extension-system`, `kernel`, `shared-kernel`, `ceo-engine`, `sdk`, `integration-tests`) in a documentation-only commit, written by someone (or an AI session) with time to read each package's actual implementation in full first.
+3. Author the F5 genuine documentation gaps (`capability-engine`, `extension-system`, `kernel`, `shared-kernel`, `ceo-engine`, `sdk`, `integration-tests`) in a documentation-only commit, written by someone (or an AI session) with time to read each package's actual implementation in full first.
 4. See `DEPENDENCY_AUDIT.md` recommendation 1 for the F7 cycle.

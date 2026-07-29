@@ -1,6 +1,8 @@
 # Dependency Audit — Lateen OS
 
-> Part of Commit 35 — Enterprise Platform Certification & Stabilization. Scope: `packages/*` (38 packages). Every claim below is derived directly from the repository's `package.json` files, `pnpm`/`turbo` tool output, and `grep`-verified source imports at commit time — nothing in this report is inferred or assumed.
+> Part of Commit 35 — Enterprise Platform Certification & Stabilization. Scope: `packages/*` (39 packages). Every claim below is derived directly from the repository's `package.json` files, `pnpm`/`turbo` tool output, and `grep`-verified source imports at commit time — nothing in this report is inferred or assumed.
+>
+> **Correction (subsequent documentation sprint)**: this report originally stated the platform total as 38 packages; the correct count is 39 (`integration-tests` was tested but omitted from the prose totals). The DFS graph size cited below (39 nodes) was always correct — only the surrounding narrative count was wrong.
 
 ## Method
 
@@ -11,7 +13,7 @@
 
 ## Passed Checks
 
-- **Circular dependencies: exactly one found, fully characterized (see Findings).** All other 38 packages sit in a strict DAG — verified three independent ways: a DFS cycle search over the full 39-node graph, `pnpm install`'s own cyclic-dependency warning, and `turbo run build`'s own cyclic-dependency error, all in full agreement.
+- **Circular dependencies: exactly one found, fully characterized (see Findings).** All other 37 packages sit in a strict DAG — verified three independent ways: a DFS cycle search over the full 39-node graph, `pnpm install`'s own cyclic-dependency warning, and `turbo run build`'s own cyclic-dependency error, all in full agreement.
 - **Repository leakage across packages: zero.** No package imports another business package's `repository.ts`/`repository.impl.ts`. The only cross-package imports matching `*/repository*` are the sanctioned, universal use of `@lateen-os/shared-kernel/repository`'s generic `createInMemoryRepository` helper (216 files, all of them this one pattern).
 - **No package imports a sibling for anything other than its public runtime surface** in the 18 packages that have a `relationship-management/` module — every collaborator dependency is typed as a narrow `Pick<SiblingRuntime, '...'>` slice, never the whole sibling runtime type.
 - **No workspace `package.json` declares a dependency on a package that does not exist** in the workspace.
@@ -55,7 +57,7 @@ Verified by grepping each package's `src/` tree for any import (including subpat
 
 ### F4 — Dependency fan-in/fan-out (informational, not a defect)
 
-`shared-kernel` and `business-dna` remain the platform's highest-centrality packages (0 and 1 outbound `@lateen-os/*` dependency respectively; the largest fan-in of any package in the graph). `analytics-engine` remains the widest single consumer (15 declared `@lateen-os/*` dependencies). These figures are consistent with, and an extension of, the dependency-centrality analysis already published in `docs/handbook/08_PROJECT_STATUS.md` §17 for the Phase-1 subset of packages; Commit 35 did not recompute a full updated centrality table for all 38 packages, since doing so is descriptive, not a certification finding.
+`shared-kernel` and `business-dna` remain the platform's highest-centrality packages (0 and 1 outbound `@lateen-os/*` dependency respectively; the largest fan-in of any package in the graph). `analytics-engine` remains the widest single consumer (15 declared `@lateen-os/*` dependencies). These figures are consistent with, and an extension of, the dependency-centrality analysis already published in `docs/handbook/08_PROJECT_STATUS.md` §17 for the Phase-1 subset of packages; Commit 35 did not recompute a full updated centrality table for all 39 packages, since doing so is descriptive, not a certification finding.
 
 ## Warnings
 
