@@ -91,6 +91,22 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
     return row ? mapOrganization(row) : null;
   }
 
+  async findByDomain(domain: string): Promise<Organization | null> {
+    const rows = await this.prisma.organization.findMany();
+    const match = rows.map(mapOrganization).find((org) => org.domain === domain);
+    return match ?? null;
+  }
+
+  async findByStatus(status: Organization['status']): Promise<readonly Organization[]> {
+    const rows = await this.prisma.organization.findMany({ where: { status } });
+    return rows.map(mapOrganization);
+  }
+
+  async findAll(): Promise<readonly Organization[]> {
+    const rows = await this.prisma.organization.findMany();
+    return rows.map(mapOrganization);
+  }
+
   async save(entity: Organization): Promise<void> {
     await this.prisma.organization.upsert({
       where: { id: entity.id as string },
@@ -212,7 +228,9 @@ export class PrismaBranchRepository implements BranchRepository {
   }
 }
 
-function dataJsonRepo<TEntity extends { id: unknown; organizationId: OrganizationId; code: string }>(
+function dataJsonRepo<
+  TEntity extends { id: unknown; organizationId: OrganizationId; code: string },
+>(
   prisma: PrismaClient,
   model: keyof PrismaClient,
   mapper: (row: never) => TEntity,
@@ -234,16 +252,23 @@ function dataJsonRepo<TEntity extends { id: unknown; organizationId: Organizatio
       return row ? mapper(row) : null;
     },
     async save(entity: TEntity) {
-      const data = toJson(extractDataFields(toEntityRecord(entity), [
-        'id',
-        'organizationId',
-        'createdAt',
-        'updatedAt',
-        ...coreKeys,
-      ]));
+      const data = toJson(
+        extractDataFields(toEntityRecord(entity), [
+          'id',
+          'organizationId',
+          'createdAt',
+          'updatedAt',
+          ...coreKeys,
+        ]),
+      );
       await delegate.upsert({
         where: { id: entity.id as string },
-        create: { id: entity.id as string, organizationId: entity.organizationId as string, ...toRow(entity), data },
+        create: {
+          id: entity.id as string,
+          organizationId: entity.organizationId as string,
+          ...toRow(entity),
+          data,
+        },
         update: { ...toRow(entity), data },
       });
     },
@@ -270,16 +295,22 @@ export function createRepositories(prisma: PrismaClient) {
   const branch = new PrismaBranchRepository(prisma);
 
   const department = {
-    ...dataJsonRepo<Department>(prisma, 'department', mapDepartment, ['code', 'name', 'status'], (e) => ({
-      code: e.code,
-      name: e.name,
-      status: e.status,
-      branchId: e.branchId ?? null,
-      parentDepartmentId: e.parentDepartmentId ?? null,
-      description: e.description ?? null,
-      headId: e.headId ?? null,
-      costCenter: e.costCenter ?? null,
-    })),
+    ...dataJsonRepo<Department>(
+      prisma,
+      'department',
+      mapDepartment,
+      ['code', 'name', 'status'],
+      (e) => ({
+        code: e.code,
+        name: e.name,
+        status: e.status,
+        branchId: e.branchId ?? null,
+        parentDepartmentId: e.parentDepartmentId ?? null,
+        description: e.description ?? null,
+        headId: e.headId ?? null,
+        costCenter: e.costCenter ?? null,
+      }),
+    ),
     findByOrganization: async (organizationId: OrganizationId) => {
       const rows = await prisma.department.findMany({
         where: { organizationId: organizationId as string },
@@ -353,16 +384,22 @@ export function createRepositories(prisma: PrismaClient) {
     },
   } satisfies EmployeeRepository;
 
-  const roleBase = dataJsonRepo<Role>(prisma, 'role', mapRole, ['code', 'name', 'type', 'status'], (e) => ({
-    code: e.code,
-    name: e.name,
-    type: e.type,
-    status: e.status,
-    description: e.description ?? null,
-    parentRoleId: e.parentRoleId ?? null,
-    departmentId: e.departmentId ?? null,
-    permissionIds: e.permissionIds ?? [],
-  }));
+  const roleBase = dataJsonRepo<Role>(
+    prisma,
+    'role',
+    mapRole,
+    ['code', 'name', 'type', 'status'],
+    (e) => ({
+      code: e.code,
+      name: e.name,
+      type: e.type,
+      status: e.status,
+      description: e.description ?? null,
+      parentRoleId: e.parentRoleId ?? null,
+      departmentId: e.departmentId ?? null,
+      permissionIds: e.permissionIds ?? [],
+    }),
+  );
   const role = {
     ...roleBase,
     findByType: async (organizationId: OrganizationId, type: Role['type']) => {
@@ -484,6 +521,7 @@ export function createRepositories(prisma: PrismaClient) {
       });
       return rows.map(mapProduct);
     },
+    findAll: productBase.findByOrganization,
   } satisfies ProductRepository;
 
   const service = dataJsonRepo<Service>(
@@ -552,7 +590,9 @@ export function createRepositories(prisma: PrismaClient) {
       const rows = await prisma.project.findMany({
         where: { organizationId: organizationId as string },
       });
-      return rows.map(mapProject).filter((p) => (p as Project & { customerId?: string }).customerId === customerId);
+      return rows
+        .map(mapProject)
+        .filter((p) => (p as Project & { customerId?: string }).customerId === customerId);
     },
     findByStatus: async (organizationId: OrganizationId, status: Project['status']) => {
       const rows = await prisma.project.findMany({
@@ -576,10 +616,23 @@ export function createRepositories(prisma: PrismaClient) {
       return row ? mapQuotation(row) : null;
     },
     async save(entity: Quotation) {
-      const data = toJson(extractDataFields(toEntityRecord(entity), [
-        'id', 'organizationId', 'number', 'customerId', 'status', 'currency',
-        'subtotal', 'discount', 'tax', 'total', 'lineItems', 'createdAt', 'updatedAt',
-      ]));
+      const data = toJson(
+        extractDataFields(toEntityRecord(entity), [
+          'id',
+          'organizationId',
+          'number',
+          'customerId',
+          'status',
+          'currency',
+          'subtotal',
+          'discount',
+          'tax',
+          'total',
+          'lineItems',
+          'createdAt',
+          'updatedAt',
+        ]),
+      );
       await prisma.quotation.upsert({
         where: { id: entity.id as string },
         create: {
@@ -645,10 +698,23 @@ export function createRepositories(prisma: PrismaClient) {
       return row ? mapOrder(row) : null;
     },
     async save(entity: Order) {
-      const data = toJson(extractDataFields(toEntityRecord(entity), [
-        'id', 'organizationId', 'number', 'customerId', 'status', 'currency',
-        'subtotal', 'discount', 'tax', 'total', 'lineItems', 'createdAt', 'updatedAt',
-      ]));
+      const data = toJson(
+        extractDataFields(toEntityRecord(entity), [
+          'id',
+          'organizationId',
+          'number',
+          'customerId',
+          'status',
+          'currency',
+          'subtotal',
+          'discount',
+          'tax',
+          'total',
+          'lineItems',
+          'createdAt',
+          'updatedAt',
+        ]),
+      );
       await prisma.order.upsert({
         where: { id: entity.id as string },
         create: {
@@ -695,8 +761,12 @@ export function createRepositories(prisma: PrismaClient) {
       return rows.map(mapOrder);
     },
     async findByProject(organizationId: OrganizationId, projectId: string) {
-      const rows = await prisma.order.findMany({ where: { organizationId: organizationId as string } });
-      return rows.map(mapOrder).filter((o) => (o as Order & { projectId?: string }).projectId === projectId);
+      const rows = await prisma.order.findMany({
+        where: { organizationId: organizationId as string },
+      });
+      return rows
+        .map(mapOrder)
+        .filter((o) => (o as Order & { projectId?: string }).projectId === projectId);
     },
     async findByStatus(organizationId: OrganizationId, status: Order['status']) {
       const rows = await prisma.order.findMany({
@@ -714,10 +784,24 @@ export function createRepositories(prisma: PrismaClient) {
       return row ? mapInvoice(row) : null;
     },
     async save(entity: Invoice) {
-      const data = toJson(extractDataFields(toEntityRecord(entity), [
-        'id', 'organizationId', 'number', 'type', 'status', 'currency',
-        'subtotal', 'discount', 'tax', 'total', 'amountDue', 'lineItems', 'createdAt', 'updatedAt',
-      ]));
+      const data = toJson(
+        extractDataFields(toEntityRecord(entity), [
+          'id',
+          'organizationId',
+          'number',
+          'type',
+          'status',
+          'currency',
+          'subtotal',
+          'discount',
+          'tax',
+          'total',
+          'amountDue',
+          'lineItems',
+          'createdAt',
+          'updatedAt',
+        ]),
+      );
       await prisma.invoice.upsert({
         where: { id: entity.id as string },
         create: {
@@ -760,7 +844,9 @@ export function createRepositories(prisma: PrismaClient) {
       return row ? mapInvoice(row) : null;
     },
     async findByCustomer(organizationId: OrganizationId, customerId: string) {
-      const rows = await prisma.invoice.findMany({ where: { organizationId: organizationId as string } });
+      const rows = await prisma.invoice.findMany({
+        where: { organizationId: organizationId as string },
+      });
       return rows.map(mapInvoice).filter((i) => i.customerId === customerId);
     },
     async findByStatus(organizationId: OrganizationId, status: Invoice['status']) {
@@ -810,6 +896,7 @@ export function createRepositories(prisma: PrismaClient) {
       });
       return rows.map(mapPolicy);
     },
+    findAll: policyBase.findByOrganization,
   } satisfies PolicyRepository;
 
   const kpi = dataJsonRepo<Kpi>(
@@ -852,7 +939,10 @@ export function createRepositories(prisma: PrismaClient) {
   );
   const agent = {
     ...agentBase,
-    findByWorkforceType: async (organizationId: OrganizationId, workforceType: Agent['workforceType']) => {
+    findByWorkforceType: async (
+      organizationId: OrganizationId,
+      workforceType: Agent['workforceType'],
+    ) => {
       const rows = await prisma.agent.findMany({
         where: { organizationId: organizationId as string, workforceType },
       });
