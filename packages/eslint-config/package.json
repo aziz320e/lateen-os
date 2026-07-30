@@ -1,0 +1,21 @@
+{
+  "name": "@lateen-os/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared ESLint flat config for Lateen OS apps",
+  "license": "UNLICENSED",
+  "type": "module",
+  "main": "./base.mjs",
+  "exports": {
+    "./base": "./base.mjs"
+  },
+  "dependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.8.0",
+    "typescript-eslint": "^8.65.0"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  }
+}

@@ -47,3 +47,45 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Coverage
+        run: pnpm test:coverage
+
+      - name: Dependency & security audit
+        # Informational, not gating: this monorepo carries pre-existing
+        # transitive vulnerabilities across packages outside this change's
+        # scope (see release/KNOWN_LIMITATIONS.md). Failing the build on
+        # every pnpm advisory update would make CI red for reasons unrelated
+        # to the code being merged. Findings are still visible in the log
+        # for triage, and deploy.yml runs CodeQL + Trivy + SBOM generation
+        # as the gating security scan before any deployment.
+        run: pnpm audit || true
+
+      - name: Documentation validation
+        run: |
+          required_docs=(
+            "README.md"
+            "CLAUDE.md"
+            "release/VERSION"
+            "release/CHANGELOG.md"
+            "release/RELEASE_NOTES.md"
+            "apps/backend/.env.example"
+          )
+          missing=0
+          for doc in "${required_docs[@]}"; do
+            if [ ! -f "$doc" ]; then
+              echo "::error::Missing required doc: $doc"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            apps/backend/dist
+            apps/erp-web/.next
+          retention-days: 7
+          if-no-files-found: warn

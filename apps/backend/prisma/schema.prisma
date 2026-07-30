@@ -1,0 +1,294 @@
+// Lateen OS — Platform Backend Host Prisma Schema
+//
+// Two families of tables, per Phase 4 Task 2 / Task 3:
+//
+// 1. MIRROR tables (Organization, BusinessProfile, Product, Employee,
+//    Customer, Warehouse, Account, Project) — durable, queryable copies
+//    of entities that real business engines (business-dna, hr-engine,
+//    crm-engine, inventory-engine, finance-engine,
+//    project-management-engine) already own and manage in-memory. Postgres
+//    is NOT the source of truth for these — the owning engine's own
+//    runtime is. These tables are written to exclusively by
+//    `src/adapters/*` after the real engine call already succeeded, never
+//    read by a business engine, and never the origin of a business
+//    decision. See `docs/adr` (in this task's own report) for the full
+//    rationale.
+//
+// 2. OWNED tables (User, Role, Permission, PermissionGroup,
+//    RoleAssignment, Session, RefreshToken) — genuinely new data with no
+//    existing engine owner. Postgres IS the source of truth for these.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Mirror tables
+// ---------------------------------------------------------------------------
+
+model Organization {
+  id                 String   @id
+  code               String   @unique
+  name               String
+  legalName          String
+  registrationNumber String
+  taxId              String
+  status             String
+  defaultCurrency    String
+  defaultLocale      String
+  timezone           String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  mirroredAt         DateTime @default(now())
+
+  businessProfile BusinessProfile?
+  employees       Employee[]
+  customers       Customer[]
+  products        Product[]
+  warehouses      Warehouse[]
+  accounts        Account[]
+  projects        Project[]
+  users           User[]
+  roles           Role[]
+
+  @@map("mirror_organizations")
+}
+
+model BusinessProfile {
+  organizationId String   @id
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  displayName    String
+  legalEntity    Json
+  updatedAt      DateTime @updatedAt
+  mirroredAt     DateTime @default(now())
+
+  @@map("mirror_business_profiles")
+}
+
+model Product {
+  id             String   @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  code           String
+  name           String
+  category       String
+  productionType String
+  unitOfMeasure  String
+  currency       String
+  basePrice      String?
+  costPrice      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  mirroredAt     DateTime @default(now())
+
+  @@unique([organizationId, code])
+  @@map("mirror_products")
+}
+
+model Employee {
+  id               String   @id
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  employeeNumber   String
+  firstName        String
+  lastName         String
+  email            String
+  employmentType   String
+  employmentStatus String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  mirroredAt       DateTime @default(now())
+
+  @@unique([organizationId, employeeNumber])
+  @@map("mirror_employees")
+}
+
+model Customer {
+  id             String   @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  email          String?
+  company        String?
+  status         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  mirroredAt     DateTime @default(now())
+
+  @@map("mirror_customers")
+}
+
+model Warehouse {
+  id             String   @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  code           String
+  name           String
+  address        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  mirroredAt     DateTime @default(now())
+
+  @@unique([organizationId, code])
+  @@map("mirror_warehouses")
+}
+
+model Account {
+  id             String   @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  code           String
+  name           String
+  accountType    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  mirroredAt     DateTime @default(now())
+
+  @@unique([organizationId, code])
+  @@map("mirror_accounts")
+}
+
+model Project {
+  id             String   @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  code           String
+  name           String
+  description    String?
+  customerId     String?
+  status         String
+  startDate      DateTime? @db.Date
+  targetEndDate  DateTime? @db.Date
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  mirroredAt     DateTime @default(now())
+
+  @@unique([organizationId, code])
+  @@map("mirror_projects")
+}
+
+// ---------------------------------------------------------------------------
+// Owned tables — Authentication & Authorization (Phase 4 Task 3)
+// ---------------------------------------------------------------------------
+
+model User {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  email          String
+  passwordHash   String
+  displayName    String
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  roleAssignments RoleAssignment[]
+  sessions        Session[]
+
+  @@unique([organizationId, email])
+  @@map("auth_users")
+}
+
+model Role {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  roleAssignments   RoleAssignment[]
+  permissionGroups  RolePermissionGroup[]
+
+  @@unique([organizationId, name])
+  @@map("auth_roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  permissionGroups PermissionGroupPermission[]
+
+  @@map("auth_permissions")
+}
+
+model PermissionGroup {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  permissions PermissionGroupPermission[]
+  roles       RolePermissionGroup[]
+
+  @@map("auth_permission_groups")
+}
+
+model PermissionGroupPermission {
+  permissionGroupId String
+  permissionGroup   PermissionGroup @relation(fields: [permissionGroupId], references: [id])
+  permissionId      String
+  permission        Permission      @relation(fields: [permissionId], references: [id])
+
+  @@id([permissionGroupId, permissionId])
+  @@map("auth_permission_group_permissions")
+}
+
+model RolePermissionGroup {
+  roleId            String
+  role              Role            @relation(fields: [roleId], references: [id])
+  permissionGroupId String
+  permissionGroup   PermissionGroup @relation(fields: [permissionGroupId], references: [id])
+
+  @@id([roleId, permissionGroupId])
+  @@map("auth_role_permission_groups")
+}
+
+model RoleAssignment {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  roleId     String
+  role       Role     @relation(fields: [roleId], references: [id])
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+  @@map("auth_role_assignments")
+}
+
+model Session {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  ipAddress  String?
+
+  refreshTokens RefreshToken[]
+
+  @@map("auth_sessions")
+}
+
+model RefreshToken {
+  id              String    @id @default(uuid())
+  sessionId       String
+  session         Session   @relation(fields: [sessionId], references: [id])
+  tokenHash       String    @unique
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  replacedByTokenId String?
+
+  @@map("auth_refresh_tokens")
+}

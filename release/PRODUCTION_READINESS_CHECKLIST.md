@@ -1,4 +1,4 @@
-# Production Readiness Checklist — v1.0.0-rc.1
+# Production Readiness Checklist — v1.0.0-rc.2
 
 ## Architecture
 
@@ -54,8 +54,24 @@
 
 - [x] CHANGELOG.md
 - [x] RELEASE_NOTES.md
-- [x] VERSION (1.0.0-rc.1)
+- [x] VERSION (1.0.0-rc.2)
 - [x] SBOM.json
 - [x] NOTICE
+- [x] KNOWN_LIMITATIONS.md (new in rc.2)
+
+## rc.2 — apps/backend + apps/erp-web
+
+- [x] Security headers + rate limiting (`@fastify/helmet`, `@fastify/rate-limit`)
+- [x] Fail-fast production config validation (JWT secrets, CORS, cookie security)
+- [x] `.env.example` documenting all runtime config
+- [x] Real ESLint (0 errors both apps; see `packages/eslint-config`)
+- [x] Husky + lint-staged wired at repo root
+- [x] Coverage reporting wired (`test:coverage`); exact stmt/line % unreliable in this sandbox — see `release/KNOWN_LIMITATIONS.md`
+- [x] Docker Compose stack (`deployment/docker/docker-compose.apps.yml`); YAML-validated, not live-built (no Docker daemon in this sandbox)
+- [x] CI extended: coverage, dependency/security audit, doc validation, artifact upload
+- [x] Scoped operations guide (`docs/release/BACKEND_ERP_WEB_OPERATIONS.md`)
+- [x] Measured (not estimated) build/startup/latency/memory/bundle-size benchmarks
+- [ ] Full `pnpm build`/`test`/`lint`/`typecheck` via root Turbo — still blocked (pre-existing `ai-brain`↔`multi-agent` cycle, in addition to rc.1's kernel/sdk/extension-system cycle); validated instead via direct per-app invocation
+- [ ] Not yet wired into Helm chart / Kubernetes manifests (Docker Compose only)
 
 **RC Status:** Ready for stakeholder review with documented known issues.

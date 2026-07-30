@@ -1,0 +1,9 @@
+{
+  "extends": "@lateen-os/typescript-config/node.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "lib": ["ES2022"]
+  },
+  "include": ["**/*.ts"]
+}

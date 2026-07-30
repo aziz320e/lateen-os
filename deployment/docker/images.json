@@ -84,6 +84,13 @@
       "path": "services/cloud-control-plane",
       "port": 4012,
       "healthPath": "/health"
+    },
+    {
+      "name": "backend",
+      "package": "@lateen-os/backend",
+      "path": "apps/backend",
+      "port": 4013,
+      "healthPath": "/health"
     }
   ],
   "frontends": [
@@ -164,6 +171,12 @@
       "package": "@lateen-os/cloud-console",
       "path": "apps/cloud-console",
       "port": 3012
+    },
+    {
+      "name": "erp-web",
+      "package": "@lateen-os/erp-web",
+      "path": "apps/erp-web",
+      "port": 3013
     }
   ]
 }

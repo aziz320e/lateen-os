@@ -1,12 +1,24 @@
-# Lateen OS Enterprise v1.0.0-rc.1 — Release Notes
+# Lateen OS Enterprise v1.0.0-rc.2 — Release Notes
 
-**Release Date:** 2026-07-20  
-**Architecture:** v1.0 (locked)  
+**Release Date:** 2026-07-30
+**Architecture:** v1.0 (locked)
 **Codename:** Enterprise RC
 
 ---
 
-## Overview
+## What's New in rc.2
+
+rc.2 adds the platform's first real REST API surface and its first consuming web application, on top of the rc.1 platform documented below (which is unchanged in this RC):
+
+- **`apps/backend`** (port 4013) — a NestJS + Fastify REST API host exposing CRM, Sales, Finance, Inventory, Projects, HR, Customer Success, Documents, Analytics, Administration, and Marketplace endpoints over the platform's existing engine packages, with JWT auth/RBAC, Prisma/PostgreSQL persistence, and OpenAPI docs.
+- **`apps/erp-web`** (port 3013) — a Next.js application consuming that API exclusively over HTTP.
+- A follow-up production-hardening pass on both apps: security headers/rate limiting, fail-fast production config validation, real ESLint, Husky/lint-staged, test coverage reporting, a Docker Compose stack, extended CI, an operations guide, and measured (not estimated) performance benchmarks.
+
+Full detail: `release/CHANGELOG.md` → `[1.0.0-rc.2]`. Known issues specific to this RC, including a newly discovered Turbo cyclic dependency, are tracked in `release/KNOWN_LIMITATIONS.md`.
+
+---
+
+## rc.1 Overview
 
 Lateen OS Enterprise v1.0.0-rc.1 is the first Release Candidate of the unified AI-native enterprise operating system. This release consolidates 34 epics of platform development into a production-ready candidate with full documentation, validation, and operational artifacts.
 
@@ -54,7 +66,7 @@ node release/scripts/validate.mjs
 
 ## Support
 
-See [Troubleshooting Guide](../docs/release/TROUBLESHOOTING.md) and [Operations Guide](../deployment/docs/OPERATIONS-GUIDE.md).
+See [Troubleshooting Guide](../docs/release/TROUBLESHOOTING.md) and [Operations Guide](../deployment/docs/OPERATIONS-GUIDE.md). For `apps/backend`/`apps/erp-web` specifically, see [Backend + ERP Web Operations Guide](../docs/release/BACKEND_ERP_WEB_OPERATIONS.md).
 
 ---
 
