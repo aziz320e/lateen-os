@@ -13,10 +13,24 @@ export type {
 export type { GraphNodeId, GraphEdgeId } from '@lateen-os/domain-graph';
 export type { KnowledgeEntryId, DecisionRecordId } from '@lateen-os/institutional-memory';
 export type { DecisionId } from '@lateen-os/decision-engine';
-export type { RuntimeAgentId, TaskId, ExecutionPlanId as RuntimeExecutionPlanId } from '@lateen-os/ai-runtime';
+export type {
+  RuntimeAgentId,
+  TaskId,
+  ExecutionPlanId as RuntimeExecutionPlanId,
+} from '@lateen-os/ai-runtime';
 export type { WorkerId } from '@lateen-os/ai-workforce';
 export type { WorkflowDefinitionId, WorkflowInstanceId } from '@lateen-os/workflow-engine';
-export type { MissionId } from '@lateen-os/multi-agent';
+
+/**
+ * Mission identifier — structurally identical to `@lateen-os/multi-agent`'s
+ * own `MissionId` (both are plain `Identifier` aliases). Defined locally
+ * from the shared primitive rather than imported from `multi-agent`, since
+ * that package also references `ai-brain`'s `Brain` type (for its optional
+ * escalation-reasoning collaborator) — importing `MissionId` from
+ * `multi-agent` here would create a package-level circular dependency for
+ * the sake of a single zero-behavior type alias.
+ */
+export type MissionId = Identifier;
 
 /** AI Brain identifiers. */
 export type BrainSessionId = Identifier;

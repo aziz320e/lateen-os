@@ -34,7 +34,6 @@
     "@lateen-os/decision-engine": "workspace:*",
     "@lateen-os/domain-graph": "workspace:*",
     "@lateen-os/institutional-memory": "workspace:*",
-    "@lateen-os/multi-agent": "workspace:*",
     "@lateen-os/shared-kernel": "workspace:*",
     "@lateen-os/workflow-engine": "workspace:*"
   }

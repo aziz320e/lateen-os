@@ -3,10 +3,10 @@ import type { ProjectId } from '@lateen-os/business-dna';
 import type { DecisionId } from '@lateen-os/decision-engine';
 import type { GraphNodeId } from '@lateen-os/domain-graph';
 import type { KnowledgeEntryId } from '@lateen-os/institutional-memory';
-import type { MissionId } from '@lateen-os/multi-agent';
 import type {
   ConversationContextId,
   EnterpriseContextId,
+  MissionId,
   OrganizationId,
 } from '../shared/identifiers.js';
 import type { CorrelationId } from '../shared/primitives.js';
