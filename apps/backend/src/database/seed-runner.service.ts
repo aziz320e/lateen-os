@@ -204,6 +204,10 @@ export class SeedRunnerService implements OnModuleInit {
       'crm:write',
       'finance:read',
       'finance:write',
+      'inventory:read',
+      'inventory:write',
+      'projects:read',
+      'projects:write',
     ];
 
     for (const code of permissionCodes) {
@@ -288,7 +292,7 @@ export class SeedRunnerService implements OnModuleInit {
     });
 
     this.logger.log(
-      'Seeded RBAC baseline: 1 admin user, 1 role, 1 permission group, 6 permissions, 6 policies.',
+      `Seeded RBAC baseline: 1 admin user, 1 role, 1 permission group, ${permissionCodes.length} permissions, ${permissionCodes.length} policies.`,
     );
   }
 }

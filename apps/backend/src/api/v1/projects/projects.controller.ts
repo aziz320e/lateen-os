@@ -27,8 +27,9 @@ import type {
   ProjectRuntime,
   queries as projectQueries,
 } from '@lateen-os/project-management-engine';
-import { CurrentUser } from '../../../auth/decorators.js';
+import { CurrentUser, RequirePermission } from '../../../auth/decorators.js';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../../auth/guards/permissions.guard.js';
 import type { AccessTokenPayload } from '../../../auth/token.service.js';
 import { RuntimeRegistryService } from '../../../runtime-registry/runtime-registry.service.js';
 import { DomainExceptionFilter } from '../common/domain-exception.filter.js';
@@ -91,21 +92,29 @@ export class ProjectsController {
   // ---- Portfolios & Programs (static paths — must precede `:id`) ----
 
   @Get('portfolios')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listPortfolios(@CurrentUser() user: AccessTokenPayload) {
     return this.runtime().projects.listPortfolios(user.organizationId);
   }
 
   @Post('portfolios')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createPortfolio(@CurrentUser() user: AccessTokenPayload, @Body() body: CreatePortfolioDto) {
     return this.runtime().projects.createPortfolio(user.organizationId, body);
   }
 
   @Get('programs')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listPrograms(@CurrentUser() user: AccessTokenPayload) {
     return this.runtime().projects.listPrograms(user.organizationId);
   }
 
   @Post('programs')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createProgram(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateProgramDto) {
     return this.runtime().projects.createProgram(user.organizationId, body);
   }
@@ -113,16 +122,22 @@ export class ProjectsController {
   // ---- Phases (static prefix) ----
 
   @Post('phases')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createPhase(@CurrentUser() user: AccessTokenPayload, @Body() body: CreatePhaseDto) {
     return this.runtime().projects.createPhase(user.organizationId, body);
   }
 
   @Post('phases/:phaseId/start')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async startPhase(@CurrentUser() user: AccessTokenPayload, @Param('phaseId') phaseId: string) {
     return this.runtime().projects.startPhase(user.organizationId, phaseId);
   }
 
   @Post('phases/:phaseId/complete')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async completePhase(@CurrentUser() user: AccessTokenPayload, @Param('phaseId') phaseId: string) {
     return this.runtime().projects.completePhase(user.organizationId, phaseId);
   }
@@ -130,6 +145,8 @@ export class ProjectsController {
   // ---- Milestones ----
 
   @Get('milestones')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listMilestones(@CurrentUser() user: AccessTokenPayload, @Query() query: ListMilestonesDto) {
     const result = await this.runtime().queries.findMilestones({
       organizationId: user.organizationId,
@@ -142,11 +159,15 @@ export class ProjectsController {
   }
 
   @Post('milestones')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createMilestone(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateMilestoneDto) {
     return this.runtime().projects.createMilestone(user.organizationId, body);
   }
 
   @Post('milestones/:milestoneId/reach')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async reachMilestone(
     @CurrentUser() user: AccessTokenPayload,
     @Param('milestoneId') milestoneId: string,
@@ -160,6 +181,8 @@ export class ProjectsController {
   }
 
   @Post('milestones/:milestoneId/miss')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async missMilestone(
     @CurrentUser() user: AccessTokenPayload,
     @Param('milestoneId') milestoneId: string,
@@ -170,6 +193,8 @@ export class ProjectsController {
   // ---- Tasks ----
 
   @Get('tasks')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listTasks(@CurrentUser() user: AccessTokenPayload, @Query() query: ListProjectTasksDto) {
     const result = await this.runtime().queries.findTasks({
       organizationId: user.organizationId,
@@ -183,16 +208,22 @@ export class ProjectsController {
   }
 
   @Get('tasks/:taskId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getTask(@CurrentUser() user: AccessTokenPayload, @Param('taskId') taskId: string) {
     return this.runtime().tasks.get(user.organizationId, taskId);
   }
 
   @Post('tasks')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createTask(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateProjectTaskDto) {
     return this.runtime().tasks.create(user.organizationId, body);
   }
 
   @Patch('tasks/:taskId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async updateTask(
     @CurrentUser() user: AccessTokenPayload,
     @Param('taskId') taskId: string,
@@ -202,6 +233,8 @@ export class ProjectsController {
   }
 
   @Post('tasks/:taskId/dependencies')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async addDependency(
     @CurrentUser() user: AccessTokenPayload,
     @Param('taskId') taskId: string,
@@ -211,26 +244,36 @@ export class ProjectsController {
   }
 
   @Post('tasks/:taskId/ready')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async markTaskReady(@CurrentUser() user: AccessTokenPayload, @Param('taskId') taskId: string) {
     return this.runtime().tasks.markReady(user.organizationId, taskId);
   }
 
   @Post('tasks/:taskId/start')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async startTask(@CurrentUser() user: AccessTokenPayload, @Param('taskId') taskId: string) {
     return this.runtime().tasks.start(user.organizationId, taskId);
   }
 
   @Post('tasks/:taskId/block')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async blockTask(@CurrentUser() user: AccessTokenPayload, @Param('taskId') taskId: string) {
     return this.runtime().tasks.block(user.organizationId, taskId);
   }
 
   @Post('tasks/:taskId/complete')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async completeTask(@CurrentUser() user: AccessTokenPayload, @Param('taskId') taskId: string) {
     return this.runtime().tasks.complete(user.organizationId, taskId);
   }
 
   @Post('tasks/:taskId/cancel')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async cancelTask(@CurrentUser() user: AccessTokenPayload, @Param('taskId') taskId: string) {
     return this.runtime().tasks.cancel(user.organizationId, taskId);
   }
@@ -238,6 +281,8 @@ export class ProjectsController {
   // ---- Resources ----
 
   @Get('resources/assignments')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listAssignments(
     @CurrentUser() user: AccessTokenPayload,
     @Query() query: ListAssignmentsDto,
@@ -253,11 +298,15 @@ export class ProjectsController {
   }
 
   @Post('resources/assignments')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async assignResource(@CurrentUser() user: AccessTokenPayload, @Body() body: AssignResourceDto) {
     return this.runtime().resources.assign(user.organizationId, body);
   }
 
   @Patch('resources/assignments/:assignmentId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async updateAllocation(
     @CurrentUser() user: AccessTokenPayload,
     @Param('assignmentId') assignmentId: string,
@@ -272,6 +321,8 @@ export class ProjectsController {
   }
 
   @Post('resources/assignments/:assignmentId/complete')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async completeAssignment(
     @CurrentUser() user: AccessTokenPayload,
     @Param('assignmentId') assignmentId: string,
@@ -280,6 +331,8 @@ export class ProjectsController {
   }
 
   @Post('resources/assignments/:assignmentId/cancel')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async cancelAssignment(
     @CurrentUser() user: AccessTokenPayload,
     @Param('assignmentId') assignmentId: string,
@@ -288,6 +341,8 @@ export class ProjectsController {
   }
 
   @Get('resources/workload/:assigneeId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getWorkload(
     @CurrentUser() user: AccessTokenPayload,
     @Param('assigneeId') assigneeId: string,
@@ -299,6 +354,8 @@ export class ProjectsController {
   // ---- Scheduling ----
 
   @Get('schedules')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listSchedules(
     @CurrentUser() user: AccessTokenPayload,
     @Query('projectId') projectId?: string,
@@ -311,11 +368,15 @@ export class ProjectsController {
   }
 
   @Post('schedules/compute')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async computeSchedule(@CurrentUser() user: AccessTokenPayload, @Body() body: ComputeScheduleDto) {
     return this.runtime().scheduling.computeSchedule(user.organizationId, body);
   }
 
   @Post('schedules/:scheduleId/baseline')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async setBaseline(
     @CurrentUser() user: AccessTokenPayload,
     @Param('scheduleId') scheduleId: string,
@@ -324,6 +385,8 @@ export class ProjectsController {
   }
 
   @Get('schedules/:scheduleId/critical-path')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getCriticalPath(
     @CurrentUser() user: AccessTokenPayload,
     @Param('scheduleId') scheduleId: string,
@@ -334,6 +397,8 @@ export class ProjectsController {
   // ---- Time Tracking ----
 
   @Post('work-logs')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async logWork(@CurrentUser() user: AccessTokenPayload, @Body() body: LogWorkDto) {
     return this.runtime().timeTracking.logWork(user.organizationId, body);
   }
@@ -341,6 +406,8 @@ export class ProjectsController {
   // ---- Budgets ----
 
   @Get('budgets')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listBudgets(
     @CurrentUser() user: AccessTokenPayload,
     @Query() query: ListProjectBudgetsDto,
@@ -356,11 +423,15 @@ export class ProjectsController {
   }
 
   @Get('budgets/:budgetId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getBudget(@CurrentUser() user: AccessTokenPayload, @Param('budgetId') budgetId: string) {
     return this.runtime().budgets.get(user.organizationId, budgetId);
   }
 
   @Post('budgets')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createBudget(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateProjectBudgetDto,
@@ -369,6 +440,8 @@ export class ProjectsController {
   }
 
   @Post('budgets/:budgetId/costs')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async recordCost(
     @CurrentUser() user: AccessTokenPayload,
     @Param('budgetId') budgetId: string,
@@ -378,6 +451,8 @@ export class ProjectsController {
   }
 
   @Patch('budgets/:budgetId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async reviseBudget(
     @CurrentUser() user: AccessTokenPayload,
     @Param('budgetId') budgetId: string,
@@ -387,11 +462,15 @@ export class ProjectsController {
   }
 
   @Post('budgets/:budgetId/close')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async closeBudget(@CurrentUser() user: AccessTokenPayload, @Param('budgetId') budgetId: string) {
     return this.runtime().budgets.close(user.organizationId, budgetId);
   }
 
   @Get('budgets/:budgetId/variance')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getBudgetVariance(
     @CurrentUser() user: AccessTokenPayload,
     @Param('budgetId') budgetId: string,
@@ -403,6 +482,8 @@ export class ProjectsController {
   // ---- Risks ----
 
   @Get('risks')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listRisks(@CurrentUser() user: AccessTokenPayload, @Query() query: ListProjectRisksDto) {
     const result = await this.runtime().queries.findRisks({
       organizationId: user.organizationId,
@@ -415,16 +496,22 @@ export class ProjectsController {
   }
 
   @Get('risks/:riskId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getRisk(@CurrentUser() user: AccessTokenPayload, @Param('riskId') riskId: string) {
     return this.runtime().risks.get(user.organizationId, riskId);
   }
 
   @Post('risks')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createRisk(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateProjectRiskDto) {
     return this.runtime().risks.create(user.organizationId, body);
   }
 
   @Patch('risks/:riskId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async updateRisk(
     @CurrentUser() user: AccessTokenPayload,
     @Param('riskId') riskId: string,
@@ -434,21 +521,29 @@ export class ProjectsController {
   }
 
   @Post('risks/:riskId/start-mitigation')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async startMitigation(@CurrentUser() user: AccessTokenPayload, @Param('riskId') riskId: string) {
     return this.runtime().risks.startMitigation(user.organizationId, riskId);
   }
 
   @Post('risks/:riskId/resolve')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async resolveRisk(@CurrentUser() user: AccessTokenPayload, @Param('riskId') riskId: string) {
     return this.runtime().risks.resolve(user.organizationId, riskId);
   }
 
   @Post('risks/:riskId/accept')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async acceptRisk(@CurrentUser() user: AccessTokenPayload, @Param('riskId') riskId: string) {
     return this.runtime().risks.accept(user.organizationId, riskId);
   }
 
   @Post('risks/:riskId/mark-occurred')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async markRiskOccurred(@CurrentUser() user: AccessTokenPayload, @Param('riskId') riskId: string) {
     return this.runtime().risks.markOccurred(user.organizationId, riskId);
   }
@@ -456,6 +551,8 @@ export class ProjectsController {
   // ---- Deliverables ----
 
   @Get('deliverables')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listDeliverables(
     @CurrentUser() user: AccessTokenPayload,
     @Query() query: ListDeliverablesDto,
@@ -471,6 +568,8 @@ export class ProjectsController {
   }
 
   @Get('deliverables/:deliverableId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -479,6 +578,8 @@ export class ProjectsController {
   }
 
   @Post('deliverables')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateDeliverableDto,
@@ -487,6 +588,8 @@ export class ProjectsController {
   }
 
   @Patch('deliverables/:deliverableId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async updateDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -496,6 +599,8 @@ export class ProjectsController {
   }
 
   @Post('deliverables/:deliverableId/submit-for-review')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async submitDeliverableForReview(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -504,6 +609,8 @@ export class ProjectsController {
   }
 
   @Post('deliverables/:deliverableId/approve')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async approveDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -513,6 +620,8 @@ export class ProjectsController {
   }
 
   @Post('deliverables/:deliverableId/reject')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async rejectDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -521,6 +630,8 @@ export class ProjectsController {
   }
 
   @Post('deliverables/:deliverableId/resubmit')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async resubmitDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -529,6 +640,8 @@ export class ProjectsController {
   }
 
   @Post('deliverables/:deliverableId/complete')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async completeDeliverable(
     @CurrentUser() user: AccessTokenPayload,
     @Param('deliverableId') deliverableId: string,
@@ -539,6 +652,8 @@ export class ProjectsController {
   // ---- Search (static path) ----
 
   @Get('search')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async search(
     @CurrentUser() user: AccessTokenPayload,
     @Query('keyword') keyword: string,
@@ -554,6 +669,8 @@ export class ProjectsController {
   // ---- Projects (list/create are unambiguous; :id routes must come last) ----
 
   @Get()
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listProjects(@CurrentUser() user: AccessTokenPayload, @Query() query: ListProjectsDto) {
     const result = await this.runtime().queries.findProjects({
       organizationId: user.organizationId,
@@ -567,26 +684,36 @@ export class ProjectsController {
   }
 
   @Post()
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async createProject(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateProjectDto) {
     return this.runtime().projects.create(user.organizationId, body);
   }
 
   @Get(':id/phases')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listPhases(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.listPhasesForProject(user.organizationId, id);
   }
 
   @Get(':id/work-logs')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async listWorkLogsForProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().timeTracking.findByProject(user.organizationId, id);
   }
 
   @Get(':id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:read')
   async getProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.get(user.organizationId, id);
   }
 
   @Patch(':id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async updateProject(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -596,26 +723,36 @@ export class ProjectsController {
   }
 
   @Post(':id/start')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async startProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.start(user.organizationId, id);
   }
 
   @Post(':id/pause')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async pauseProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.pause(user.organizationId, id);
   }
 
   @Post(':id/resume')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async resumeProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.resume(user.organizationId, id);
   }
 
   @Post(':id/complete')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async completeProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.complete(user.organizationId, id);
   }
 
   @Post(':id/cancel')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async cancelProject(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -625,11 +762,15 @@ export class ProjectsController {
   }
 
   @Post(':id/archive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async archiveProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.archive(user.organizationId, id);
   }
 
   @Post(':id/restore')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('projects:write')
   async restoreProject(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().projects.restore(user.organizationId, id);
   }

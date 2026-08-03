@@ -99,13 +99,11 @@ export class AuthController {
     const refreshToken = request.cookies?.[REFRESH_TOKEN_COOKIE];
     if (!refreshToken) throw new BadRequestException('No refresh token presented.');
 
-    const organizationId =
-      request.body && typeof request.body === 'object'
-        ? (request.body as { organizationId?: string }).organizationId
-        : undefined;
-    if (!organizationId) throw new BadRequestException('organizationId is required.');
-
-    const result = await this.auth.refresh(organizationId, refreshToken);
+    // The organization is never taken from the request — it is derived
+    // exclusively from the refresh token's own session/user inside
+    // AuthService.refresh(), so a caller cannot mint a token for an
+    // organization other than the one the refresh token actually belongs to.
+    const result = await this.auth.refresh(refreshToken);
     this.setAuthCookies(reply, result.accessToken, result.refreshToken);
     return { refreshed: true };
   }

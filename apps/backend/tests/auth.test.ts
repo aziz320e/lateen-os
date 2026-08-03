@@ -1,7 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { ForbiddenException, UnauthorizedException, type ExecutionContext } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  ServiceUnavailableException,
+  UnauthorizedException,
+  type ExecutionContext,
+} from '@nestjs/common';
 import type { Reflector } from '@nestjs/core';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { AuthController } from '../src/auth/auth.controller.js';
 import { AuthService } from '../src/auth/auth.service.js';
 import { PERMISSION_KEY, ROLES_KEY } from '../src/auth/decorators.js';
 import { JwtAuthGuard } from '../src/auth/guards/jwt-auth.guard.js';
@@ -294,25 +301,206 @@ describe('Task 3 — Authentication & Authorization', () => {
       expect(loginResult.roles).toContain('finance-admin');
       expect(loginResult.permissions).toContain('finance:write');
 
-      const firstRefresh = await authService.refresh(organizationId, loginResult.refreshToken);
+      const firstRefresh = await authService.refresh(loginResult.refreshToken);
       expect(firstRefresh.accessToken).toBeTruthy();
       expect(firstRefresh.refreshToken).not.toBe(loginResult.refreshToken);
+      // The refreshed access token's organization must come from the
+      // refresh token's own session/user — never from caller input, since
+      // AuthService.refresh() no longer accepts an organization argument.
+      expect(authTokens.verifyAccessToken(firstRefresh.accessToken)?.organizationId).toBe(
+        organizationId,
+      );
 
       // The original refresh token was rotated away and must no longer work.
-      await expect(authService.refresh(organizationId, loginResult.refreshToken)).rejects.toThrow(
+      await expect(authService.refresh(loginResult.refreshToken)).rejects.toThrow(
         UnauthorizedException,
       );
 
-      const secondRefresh = await authService.refresh(organizationId, firstRefresh.refreshToken);
+      const secondRefresh = await authService.refresh(firstRefresh.refreshToken);
       expect(secondRefresh.refreshToken).not.toBe(firstRefresh.refreshToken);
 
       const profile = await authService.me(user.id);
       expect(profile?.email).toBe('jane@example.com');
 
       await authService.logout(organizationId, secondRefresh.refreshToken);
-      await expect(authService.refresh(organizationId, secondRefresh.refreshToken)).rejects.toThrow(
+      await expect(authService.refresh(secondRefresh.refreshToken)).rejects.toThrow(
         UnauthorizedException,
       );
+    });
+
+    it('rejects a refresh token whose session has expired', async () => {
+      const prisma = createFakePrisma();
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      const passwordHash = await password.hash('Secret123!');
+      await prisma.user.create({
+        data: {
+          organizationId,
+          email: 'expired@example.com',
+          passwordHash,
+          displayName: 'Ex Pired',
+        },
+      });
+      const loginResult = await authService.login(
+        { organizationId, email: 'expired@example.com', password: 'Secret123!' },
+        {},
+      );
+
+      // Force the issued refresh token's own expiry into the past —
+      // `SessionService.findValid` must treat it as invalid regardless of
+      // whether the session row itself is still marked active.
+      const tokenHash = authTokens.hashRefreshSecret(loginResult.refreshToken);
+      const record = await prisma.refreshToken.findUnique({ where: { tokenHash } });
+      await prisma.refreshToken.update({
+        where: { id: record.id },
+        data: { expiresAt: new Date(Date.now() - 1000) },
+      });
+
+      await expect(authService.refresh(loginResult.refreshToken)).rejects.toThrow(
+        UnauthorizedException,
+      );
+    });
+  });
+
+  describe('Refresh endpoint — organization-escalation regression (Blocker 1)', () => {
+    it('AuthController.refresh() never reads organizationId from the request body — it forwards only the refresh token', async () => {
+      const recordedArgs: unknown[][] = [];
+      const fakeAuthService = {
+        refresh: vi.fn(async (...args: unknown[]) => {
+          recordedArgs.push(args);
+          return { accessToken: 'new-access', refreshToken: 'new-refresh' };
+        }),
+      };
+      const controller = new AuthController(fakeAuthService as unknown as AuthService, config);
+
+      const request = {
+        cookies: { lateen_refresh_token: 'raw-refresh-token' },
+        // A malicious client attempting the historical attack: claiming a
+        // different organization in the body of a refresh request.
+        body: { organizationId: 'attacker-controlled-org' },
+        headers: {},
+      };
+      const reply = { setCookie: vi.fn() };
+
+      await controller.refresh(request as any, reply as any);
+
+      expect(fakeAuthService.refresh).toHaveBeenCalledTimes(1);
+      // The only argument forwarded must be the raw refresh token itself —
+      // if a future change reintroduces an `organizationId` argument sourced
+      // from the request body, this assertion fails.
+      expect(recordedArgs[0]).toEqual(['raw-refresh-token']);
+    });
+
+    it('a refresh token minted under one organization can never produce an access token for another', async () => {
+      const prisma = createFakePrisma();
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      const orgA = 'org-a-escalation-test';
+      const orgB = 'org-b-escalation-test';
+      const passwordHash = await password.hash('Secret123!');
+      await prisma.user.create({
+        data: { organizationId: orgA, email: 'a@example.com', passwordHash, displayName: 'User A' },
+      });
+      await prisma.user.create({
+        data: { organizationId: orgB, email: 'b@example.com', passwordHash, displayName: 'User B' },
+      });
+
+      const loginA = await authService.login(
+        { organizationId: orgA, email: 'a@example.com', password: 'Secret123!' },
+        {},
+      );
+
+      // AuthService.refresh() takes only the raw token — there is no
+      // parameter through which orgB could be requested. Refreshing
+      // orgA's token must always yield an orgA-scoped access token.
+      const refreshed = await authService.refresh(loginA.refreshToken);
+      expect(authTokens.verifyAccessToken(refreshed.accessToken)?.organizationId).toBe(orgA);
+      expect(authTokens.verifyAccessToken(refreshed.accessToken)?.organizationId).not.toBe(orgB);
+    });
+
+    it('rejects an unrecognized/garbage refresh token', async () => {
+      const prisma = createFakePrisma();
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      await expect(authService.refresh('not-a-real-token')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('Database availability (Blocker 5) — a real Postgres failure surfaces as 503, not 500', () => {
+    it('login() reports ServiceUnavailableException, not a raw 500, when the database throws', async () => {
+      const prisma = createFakePrisma();
+      prisma.user.findUnique = async () => {
+        throw new Error(
+          "Invalid `prisma.user.findUnique()` invocation: Can't reach database server at `localhost:5432`",
+        );
+      };
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      await expect(
+        authService.login({ organizationId, email: 'anyone@example.com', password: 'x' }, {}),
+      ).rejects.toThrow(ServiceUnavailableException);
+    });
+
+    it('refresh() reports ServiceUnavailableException when the database throws', async () => {
+      const prisma = createFakePrisma();
+      prisma.refreshToken.findUnique = async () => {
+        throw new Error("Can't reach database server at `localhost:5432`");
+      };
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      await expect(authService.refresh('some-token')).rejects.toThrow(ServiceUnavailableException);
+    });
+
+    it('me() reports ServiceUnavailableException when the database throws', async () => {
+      const prisma = createFakePrisma();
+      prisma.user.findUnique = async () => {
+        throw new Error("Can't reach database server at `localhost:5432`");
+      };
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      await expect(authService.me('user-1')).rejects.toThrow(ServiceUnavailableException);
+    });
+
+    it('still reports UnauthorizedException (not 503) for a genuine bad-password login — the database is reachable, the credential is just wrong', async () => {
+      const prisma = createFakePrisma();
+      const password = new PasswordService(config);
+      const authTokens = new TokenService(authentication, config);
+      const sessions = new SessionService(prisma, authTokens, config);
+      const rbac = new RbacService(prisma);
+      const authService = new AuthService(prisma, password, authTokens, sessions, rbac, audit);
+
+      const passwordHash = await password.hash('Secret123!');
+      await prisma.user.create({
+        data: { organizationId, email: 'sound@example.com', passwordHash, displayName: 'Sound DB' },
+      });
+
+      await expect(
+        authService.login({ organizationId, email: 'sound@example.com', password: 'wrong' }, {}),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });
