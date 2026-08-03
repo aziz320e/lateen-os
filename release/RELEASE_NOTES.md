@@ -14,7 +14,7 @@ rc.2 adds the platform's first real REST API surface and its first consuming web
 - **`apps/erp-web`** (port 3013) — a Next.js application consuming that API exclusively over HTTP.
 - A follow-up production-hardening pass on both apps: security headers/rate limiting, fail-fast production config validation, real ESLint, Husky/lint-staged, test coverage reporting, a Docker Compose stack, extended CI, an operations guide, and measured (not estimated) performance benchmarks.
 
-Full detail: `release/CHANGELOG.md` → `[1.0.0-rc.2]`. Known issues specific to this RC, including a newly discovered Turbo cyclic dependency, are tracked in `release/KNOWN_LIMITATIONS.md`.
+Full detail: `release/CHANGELOG.md` → `[1.0.0-rc.2]`. Remaining known issues are tracked in `release/KNOWN_LIMITATIONS.md`. A subsequent hardening pass closed six `apps/backend` security findings (including extending RBAC enforcement to Inventory and Projects, and adding regression-test coverage for all RBAC wiring), a Finance-engine precision issue, unguarded concurrency races, a deployment configuration drift (Postgres credentials and Node version), and both previously-reported Turbo cyclic dependencies — see `release/CHANGELOG.md` → `[Unreleased]`.
 
 ---
 
