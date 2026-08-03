@@ -17,9 +17,9 @@ RUN apk add --no-cache libc6-compat openssl \
 WORKDIR /repo
 
 FROM base AS pruner
-ARG SERVICE_PATH
+ARG SERVICE_PACKAGE
 COPY . .
-RUN pnpm dlx turbo prune --docker --filter=./${SERVICE_PATH}
+RUN pnpm dlx turbo prune --docker ${SERVICE_PACKAGE}
 
 FROM base AS deps
 COPY --from=pruner /repo/out/json/ .
@@ -28,11 +28,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 ARG SERVICE_PACKAGE
-COPY --from=pruner /repo/out/json/ .
-COPY --from=pruner /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=deps /repo/ .
 COPY --from=pruner /repo/out/full/ .
-RUN pnpm --filter ${SERVICE_PACKAGE} build
+RUN pnpm exec turbo run build --filter=${SERVICE_PACKAGE}
 
 FROM node:${NODE_VERSION} AS runner
 RUN apk add --no-cache libc6-compat openssl wget \

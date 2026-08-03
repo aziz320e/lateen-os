@@ -36,6 +36,7 @@
 - **`increaseReserved()`** — throws `InsufficientStockError` when the requested reservation would exceed `computeAvailableQuantity()` — a reservation can never be over-allocated beyond what is truly available (already accounting for existing reservations and damage).
 - **`decreaseReserved()` / `decreaseDamaged()`** — both floor at `0` rather than going negative.
 - **`getOrCreate()`** — every mutation method auto-creates a zeroed `StockLevel` on first use for a given (item, warehouse) pair, so callers never need a separate "initialize stock" step.
+- **Concurrency safety** — all mutators above are serialized per `(itemId, warehouseId)` via a `KeyMutex` (`shared-kernel`'s `createKeyMutex()`), closing a read-compute-write race between two concurrent movements against the same stock level.
 
 ---
 
@@ -68,7 +69,7 @@
 `counting/engine.impl.ts`'s `createInventoryCountingEngine()` implements the required cycle/full count lifecycle with deterministic variance and reconciliation:
 
 - **`computeVariance()`** (pure) — `countedQuantity - systemQuantity`.
-- **`createCount()`** — snapshots each item's *current* system quantity (via Inventory Stock) into a new `draft` count — the system quantity is captured once, at creation time, and never recomputed.
+- **`createCount()`** — snapshots each item's _current_ system quantity (via Inventory Stock) into a new `draft` count — the system quantity is captured once, at creation time, and never recomputed.
 - **`startCount()`** — `draft` → `in_progress`, stamping `startedAt`.
 - **`recordCount()`** — only permitted while `in_progress`; records a counted quantity for one line and immediately computes its variance. Throws `CountLineNotFoundError` for an item not part of the count.
 - **`completeCount()`** — `in_progress` → `completed`. For every line with a non-zero variance, calls this package's own Inventory Movements `adjust()` — reconciliation is intra-package composition, producing a real, immutable `MovementRecord` for every correction, exactly like any other adjustment. Publishes `inventory.count.completed` with the number of variant lines.

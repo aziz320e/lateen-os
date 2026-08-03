@@ -1,4 +1,5 @@
-import { Controller, Get, Inject } from '@nestjs/common';
+import { Controller, Get, Inject, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard.js';
 import type { AppConfig } from '../../config/index.js';
 import { GatewayIntegrationService } from '../../gateway/gateway-integration.service.js';
 import { RuntimeRegistryService } from '../../runtime-registry/runtime-registry.service.js';
@@ -6,6 +7,12 @@ import { AuthenticationService } from '../../security/authentication.service.js'
 import { AuthorizationService } from '../../security/authorization.service.js';
 import { APP_CONFIG } from '../tokens.js';
 
+// Not a liveness/readiness probe (those are GET /health and GET /version,
+// documented in docs/release/BACKEND_ERP_WEB_OPERATIONS.md §2 and wired
+// into Dockerfile.backend's real HEALTHCHECK) — this discloses
+// environment name and service topology, so it requires an authenticated
+// caller like every other non-probe route in this API.
+@UseGuards(JwtAuthGuard)
 @Controller()
 export class PlatformController {
   constructor(

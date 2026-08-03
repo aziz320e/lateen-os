@@ -17,8 +17,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { AdminConsoleRuntime, queries as adminQueries } from '@lateen-os/admin-console';
-import { CurrentUser } from '../../../auth/decorators.js';
+import { CurrentUser, RequirePermission } from '../../../auth/decorators.js';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../../auth/guards/permissions.guard.js';
 import type { AccessTokenPayload } from '../../../auth/token.service.js';
 import { RuntimeRegistryService } from '../../../runtime-registry/runtime-registry.service.js';
 import { DomainExceptionFilter } from '../common/domain-exception.filter.js';
@@ -64,8 +65,17 @@ export class AdministrationController {
   }
 
   // ---- Organizations (platform-wide — not scoped to the caller's own org) ----
+  //
+  // `packages/admin-console` intentionally does not scope the Organization
+  // Registry to a single organization (Organization.id === organizationId —
+  // an organization IS the tenancy boundary, per admin-console's own
+  // ARCHITECTURE.md §3). Since the engine layer has no notion of "the
+  // caller's own org" to check here, the only correct place to restrict
+  // these platform-wide operations to platform operators is this guard.
 
   @Get('organizations')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('platform:admin')
   async listOrganizations(@Query() query: ListOrganizationsDto) {
     const result = await this.runtime().queries.findOrganizations({
       status: query.status as adminQueries.FindOrganizationsQuery['status'],
@@ -76,26 +86,36 @@ export class AdministrationController {
   }
 
   @Get('organizations/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('platform:admin')
   async getOrganization(@Param('id') id: string) {
     return this.runtime().organizations.getOrganization(id);
   }
 
   @Post('organizations')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('platform:admin')
   async registerOrganization(@Body() body: RegisterOrganizationDto) {
     return this.runtime().organizations.registerOrganization(body.organizationId, body);
   }
 
   @Post('organizations/:id/suspend')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('platform:admin')
   async suspendOrganization(@Param('id') id: string) {
     return this.runtime().organizations.suspendOrganization(id);
   }
 
   @Post('organizations/:id/reactivate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('platform:admin')
   async reactivateOrganization(@Param('id') id: string) {
     return this.runtime().organizations.reactivateOrganization(id);
   }
 
   @Post('organizations/:id/archive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('platform:admin')
   async archiveOrganization(@Param('id') id: string) {
     return this.runtime().organizations.archiveOrganization(id);
   }

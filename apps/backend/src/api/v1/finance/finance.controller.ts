@@ -19,8 +19,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { FinanceRuntime, queries as financeQueries } from '@lateen-os/finance-engine';
-import { CurrentUser } from '../../../auth/decorators.js';
+import { CurrentUser, RequirePermission } from '../../../auth/decorators.js';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../../auth/guards/permissions.guard.js';
 import type { AccessTokenPayload } from '../../../auth/token.service.js';
 import { RuntimeRegistryService } from '../../../runtime-registry/runtime-registry.service.js';
 import { DomainExceptionFilter } from '../common/domain-exception.filter.js';
@@ -94,6 +95,8 @@ export class FinanceController {
   // ---- Chart of Accounts ----
 
   @Get('accounts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listAccounts(
     @CurrentUser() user: AccessTokenPayload,
     @Query() query: ListFinanceAccountsDto,
@@ -109,11 +112,15 @@ export class FinanceController {
   }
 
   @Get('accounts/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().chartOfAccounts.get(user.organizationId, id);
   }
 
   @Post('accounts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createAccount(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateFinanceAccountDto,
@@ -122,6 +129,8 @@ export class FinanceController {
   }
 
   @Patch('accounts/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async updateAccount(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -131,21 +140,29 @@ export class FinanceController {
   }
 
   @Post('accounts/:id/activate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async activateAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().chartOfAccounts.activate(user.organizationId, id);
   }
 
   @Post('accounts/:id/deactivate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async deactivateAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().chartOfAccounts.deactivate(user.organizationId, id);
   }
 
   @Post('accounts/:id/archive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async archiveAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().chartOfAccounts.archive(user.organizationId, id);
   }
 
   @Post('accounts/:id/restore')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async restoreAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().chartOfAccounts.restore(user.organizationId, id);
   }
@@ -153,6 +170,8 @@ export class FinanceController {
   // ---- General Ledger ----
 
   @Get('journal-entries')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listJournalEntries(
     @CurrentUser() user: AccessTokenPayload,
     @Query() query: ListJournalEntriesDto,
@@ -168,11 +187,15 @@ export class FinanceController {
   }
 
   @Get('journal-entries/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getJournalEntry(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().generalLedger.getJournalEntry(user.organizationId, id);
   }
 
   @Post('journal-entries')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createJournalEntry(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateJournalEntryDto,
@@ -181,11 +204,15 @@ export class FinanceController {
   }
 
   @Post('journal-entries/:id/post')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async postJournalEntry(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().generalLedger.postJournalEntry(user.organizationId, id);
   }
 
   @Post('journal-entries/:id/reverse')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async reverseJournalEntry(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -201,6 +228,8 @@ export class FinanceController {
   // ---- Accounts Receivable ----
 
   @Post('ar/customers')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createARCustomer(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateARCustomerDto,
@@ -209,16 +238,22 @@ export class FinanceController {
   }
 
   @Get('ar/customers')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listARCustomers(@CurrentUser() user: AccessTokenPayload) {
     return this.runtime().accountsReceivable.listCustomers(user.organizationId);
   }
 
   @Get('ar/customers/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getARCustomer(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsReceivable.getCustomer(user.organizationId, id);
   }
 
   @Get('ar/customers/:id/balance')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getARCustomerBalance(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     const balance = await this.runtime().accountsReceivable.getCustomerBalance(
       user.organizationId,
@@ -228,6 +263,8 @@ export class FinanceController {
   }
 
   @Get('ar/invoices')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listARInvoices(@CurrentUser() user: AccessTokenPayload, @Query() query: ListARInvoicesDto) {
     const result = await this.runtime().queries.findInvoices({
       organizationId: user.organizationId,
@@ -240,16 +277,22 @@ export class FinanceController {
   }
 
   @Get('ar/invoices/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getARInvoice(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsReceivable.getInvoice(user.organizationId, id);
   }
 
   @Post('ar/invoices')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createARInvoice(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateARInvoiceDto) {
     return this.runtime().accountsReceivable.createInvoice(user.organizationId, body);
   }
 
   @Post('ar/invoices/:id/issue')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async issueARInvoice(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -259,6 +302,8 @@ export class FinanceController {
   }
 
   @Post('ar/invoices/:id/payments')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async recordARPayment(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -268,11 +313,15 @@ export class FinanceController {
   }
 
   @Post('ar/invoices/:id/cancel')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async cancelARInvoice(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsReceivable.cancelInvoice(user.organizationId, id);
   }
 
   @Post('ar/credit-notes')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createCreditNote(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateCreditNoteDto,
@@ -281,11 +330,15 @@ export class FinanceController {
   }
 
   @Post('ar/credit-notes/:id/issue')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async issueCreditNote(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsReceivable.issueCreditNote(user.organizationId, id);
   }
 
   @Post('ar/credit-notes/:id/apply/:invoiceId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async applyCreditNote(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -299,6 +352,8 @@ export class FinanceController {
   }
 
   @Get('ar/aging')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getARAging(@CurrentUser() user: AccessTokenPayload, @Query('asOf') asOf: string) {
     return this.runtime().accountsReceivable.computeAging(user.organizationId, asOf);
   }
@@ -306,27 +361,37 @@ export class FinanceController {
   // ---- Accounts Payable ----
 
   @Post('ap/vendors')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createVendor(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateVendorDto) {
     return this.runtime().accountsPayable.createVendor(user.organizationId, body);
   }
 
   @Get('ap/vendors')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listVendors(@CurrentUser() user: AccessTokenPayload) {
     return this.runtime().accountsPayable.listVendors(user.organizationId);
   }
 
   @Get('ap/vendors/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getVendor(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsPayable.getVendor(user.organizationId, id);
   }
 
   @Get('ap/vendors/:id/balance')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getVendorBalance(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     const balance = await this.runtime().accountsPayable.getVendorBalance(user.organizationId, id);
     return { balance };
   }
 
   @Get('ap/bills')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listBills(@CurrentUser() user: AccessTokenPayload, @Query() query: ListBillsDto) {
     const result = await this.runtime().queries.findBills({
       organizationId: user.organizationId,
@@ -339,16 +404,22 @@ export class FinanceController {
   }
 
   @Get('ap/bills/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getBill(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsPayable.getBill(user.organizationId, id);
   }
 
   @Post('ap/bills')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createBill(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateBillDto) {
     return this.runtime().accountsPayable.createBill(user.organizationId, body);
   }
 
   @Post('ap/bills/:id/receive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async receiveBill(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -358,6 +429,8 @@ export class FinanceController {
   }
 
   @Post('ap/bills/:id/payments')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async recordAPPayment(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -367,11 +440,15 @@ export class FinanceController {
   }
 
   @Post('ap/bills/:id/cancel')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async cancelBill(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsPayable.cancelBill(user.organizationId, id);
   }
 
   @Post('ap/vendor-credits')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createVendorCredit(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateVendorCreditDto,
@@ -380,11 +457,15 @@ export class FinanceController {
   }
 
   @Post('ap/vendor-credits/:id/issue')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async issueVendorCredit(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accountsPayable.issueVendorCredit(user.organizationId, id);
   }
 
   @Post('ap/vendor-credits/:id/apply/:billId')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async applyVendorCredit(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -394,6 +475,8 @@ export class FinanceController {
   }
 
   @Get('ap/aging')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getAPAging(@CurrentUser() user: AccessTokenPayload, @Query('asOf') asOf: string) {
     return this.runtime().accountsPayable.computeAging(user.organizationId, asOf);
   }
@@ -401,6 +484,8 @@ export class FinanceController {
   // ---- Budgets ----
 
   @Get('budgets')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listBudgets(@CurrentUser() user: AccessTokenPayload, @Query() query: ListBudgetsDto) {
     const result = await this.runtime().queries.findBudgets({
       organizationId: user.organizationId,
@@ -413,16 +498,22 @@ export class FinanceController {
   }
 
   @Get('budgets/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getBudget(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().budgets.getBudget(user.organizationId, id);
   }
 
   @Post('budgets')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createBudget(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateBudgetDto) {
     return this.runtime().budgets.createBudget(user.organizationId, body);
   }
 
   @Patch('budgets/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async reviseBudget(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -432,21 +523,29 @@ export class FinanceController {
   }
 
   @Post('budgets/:id/approve')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async approveBudget(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().budgets.approveBudget(user.organizationId, id);
   }
 
   @Post('budgets/:id/close')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async closeBudget(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().budgets.closeBudget(user.organizationId, id);
   }
 
   @Get('budgets/:id/revisions')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getBudgetRevisions(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().budgets.getRevisionHistory(user.organizationId, id);
   }
 
   @Get('budgets/:id/variance')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getBudgetVariance(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -463,6 +562,8 @@ export class FinanceController {
   // ---- Tax ----
 
   @Get('tax/rules')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listTaxRules(@CurrentUser() user: AccessTokenPayload, @Query() query: ListTaxRulesDto) {
     const result = await this.runtime().queries.findTaxes({
       organizationId: user.organizationId,
@@ -474,16 +575,22 @@ export class FinanceController {
   }
 
   @Get('tax/rules/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getTaxRule(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().tax.getTaxRule(user.organizationId, id);
   }
 
   @Post('tax/rules')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async createTaxRule(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateTaxRuleDto) {
     return this.runtime().tax.createTaxRule(user.organizationId, body);
   }
 
   @Patch('tax/rules/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async updateTaxRule(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -493,16 +600,22 @@ export class FinanceController {
   }
 
   @Post('tax/rules/:id/activate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async activateTaxRule(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().tax.activateTaxRule(user.organizationId, id);
   }
 
   @Post('tax/rules/:id/deactivate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async deactivateTaxRule(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().tax.deactivateTaxRule(user.organizationId, id);
   }
 
   @Post('tax/rules/:id/calculate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async calculateTax(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -514,6 +627,8 @@ export class FinanceController {
   // ---- Reports ----
 
   @Get('reports')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async listReports(@CurrentUser() user: AccessTokenPayload, @Query() query: ListQueryDto) {
     const result = await this.runtime().queries.findReports({
       organizationId: user.organizationId,
@@ -524,11 +639,15 @@ export class FinanceController {
   }
 
   @Get('reports/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getReport(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().reports.getReport(user.organizationId, id);
   }
 
   @Post('reports/:type/generate')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:write')
   async generateReport(
     @CurrentUser() user: AccessTokenPayload,
     @Param('type') type: (typeof REPORT_GENERATORS)[number],
@@ -568,6 +687,8 @@ export class FinanceController {
   // ---- Balances & Search ----
 
   @Get('balances')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async getBalances(
     @CurrentUser() user: AccessTokenPayload,
     @Query('accountId') accountId?: string,
@@ -580,6 +701,8 @@ export class FinanceController {
   }
 
   @Get('search')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('finance:read')
   async search(
     @CurrentUser() user: AccessTokenPayload,
     @Query('keyword') keyword: string,

@@ -1,16 +1,19 @@
 services:
-  # Add local development dependencies here (databases, caches, etc.)
-  # Example:
-  # postgres:
-  #   image: postgres:16-alpine
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_USER: lateen
-  #     POSTGRES_PASSWORD: lateen
-  #     POSTGRES_DB: lateen_os
-  #   volumes:
-  #     - ./data/postgres:/var/lib/postgresql/data
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: lateen
+      POSTGRES_PASSWORD: lateen
+      POSTGRES_DB: lateen_os_backend
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lateen -d lateen_os_backend']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 networks:
   default:

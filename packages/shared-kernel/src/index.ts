@@ -16,6 +16,7 @@ export * as time from './time/index.js';
 export * as observability from './observability/index.js';
 export * as events from './events/index.js';
 export * as repository from './repository/index.js';
+export * as concurrency from './concurrency/index.js';
 
 export type { Entity } from './core/entity.js';
 export type { AggregateRoot } from './core/aggregate-root.js';
@@ -66,7 +67,12 @@ export type { RetryOptions } from './observability/retry.js';
 export { withRetry } from './observability/retry.js';
 export { withSpan } from './observability/span.js';
 
-export type { EventBus, EventHandler, EventMeta, WildcardEventHandler } from './events/event-bus.js';
+export type {
+  EventBus,
+  EventHandler,
+  EventMeta,
+  WildcardEventHandler,
+} from './events/event-bus.js';
 export { createEventBus } from './events/event-bus.js';
 
 export type {
@@ -75,3 +81,6 @@ export type {
   InMemoryRepositoryOptions,
 } from './repository/in-memory-repository.js';
 export { createInMemoryRepository } from './repository/in-memory-repository.js';
+
+export type { KeyMutex } from './concurrency/key-mutex.js';
+export { createKeyMutex } from './concurrency/key-mutex.js';

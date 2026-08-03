@@ -8,10 +8,18 @@ import {
   sumCredits,
   sumDebits,
 } from '../src/journal-entry/engine.impl.js';
-import { createJournalEntryRepository, createRecurringJournalTemplateRepository } from '../src/journal-entry/repository.impl.js';
+import {
+  createJournalEntryRepository,
+  createRecurringJournalTemplateRepository,
+} from '../src/journal-entry/repository.impl.js';
 import type { JournalLine } from '../src/journal-entry/types.js';
 import { createFinanceEventBus } from '../src/events/index.js';
-import { InvalidJournalEntryTransitionError, JournalEntryNotFoundError, UnbalancedJournalEntryError } from '../src/shared/errors.js';
+import { percentageOf } from '../src/shared/decimal.js';
+import {
+  InvalidJournalEntryTransitionError,
+  JournalEntryNotFoundError,
+  UnbalancedJournalEntryError,
+} from '../src/shared/errors.js';
 
 const ORG = 'org-1';
 const CASH = 'account-cash';
@@ -86,17 +94,50 @@ describe('computeNextOccurrence (pure)', () => {
 
 describe('computeAccountNetAmount (pure)', () => {
   it('nets debit-normal accounts as debit - credit', () => {
-    const entries = [{ id: 'j1', organizationId: ORG, createdAt: '', updatedAt: '', entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD', status: 'posted' as const }];
+    const entries = [
+      {
+        id: 'j1',
+        organizationId: ORG,
+        createdAt: '',
+        updatedAt: '',
+        entryDate: '2026-01-01',
+        lines: balancedLines(),
+        currency: 'USD',
+        status: 'posted' as const,
+      },
+    ];
     expect(computeAccountNetAmount(entries, CASH, 'debit')).toBe('100.00');
   });
 
   it('nets credit-normal accounts as credit - debit', () => {
-    const entries = [{ id: 'j1', organizationId: ORG, createdAt: '', updatedAt: '', entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD', status: 'posted' as const }];
+    const entries = [
+      {
+        id: 'j1',
+        organizationId: ORG,
+        createdAt: '',
+        updatedAt: '',
+        entryDate: '2026-01-01',
+        lines: balancedLines(),
+        currency: 'USD',
+        status: 'posted' as const,
+      },
+    ];
     expect(computeAccountNetAmount(entries, REVENUE, 'credit')).toBe('100.00');
   });
 
   it('is 0 for an account with no matching lines', () => {
-    const entries = [{ id: 'j1', organizationId: ORG, createdAt: '', updatedAt: '', entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD', status: 'posted' as const }];
+    const entries = [
+      {
+        id: 'j1',
+        organizationId: ORG,
+        createdAt: '',
+        updatedAt: '',
+        entryDate: '2026-01-01',
+        lines: balancedLines(),
+        currency: 'USD',
+        status: 'posted' as const,
+      },
+    ];
     expect(computeAccountNetAmount(entries, 'unrelated-account', 'debit')).toBe('0.00');
   });
 });
@@ -104,7 +145,11 @@ describe('computeAccountNetAmount (pure)', () => {
 describe('GeneralLedgerEngine — createJournalEntry', () => {
   it('creates a draft, balanced entry', async () => {
     const { engine } = setup();
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     expect(entry.status).toBe('draft');
     expect(entry.lines).toEqual(balancedLines());
   });
@@ -115,8 +160,38 @@ describe('GeneralLedgerEngine — createJournalEntry', () => {
       { accountId: CASH, debit: '100.00', credit: '0.00' },
       { accountId: REVENUE, debit: '0.00', credit: '50.00' },
     ];
-    await expect(engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: unbalanced, currency: 'USD' })).rejects.toBeInstanceOf(UnbalancedJournalEntryError);
+    await expect(
+      engine.createJournalEntry(ORG, {
+        entryDate: '2026-01-01',
+        lines: unbalanced,
+        currency: 'USD',
+      }),
+    ).rejects.toBeInstanceOf(UnbalancedJournalEntryError);
     expect(await repository.findAll(ORG)).toHaveLength(0);
+  });
+
+  it('balances an entry whose lines were derived from a tax-rate calculation at an exact half-cent boundary (precision regression)', async () => {
+    // 1.5% of $67.00 is exactly $1.005 -- the boundary value the
+    // shared/decimal precision tests confirm rounds incorrectly under
+    // the prior float-based implementation ('1.00' instead of the
+    // correct '1.01'). This proves that fix reaches all the way through
+    // to real ledger entries, not just the arithmetic helper in
+    // isolation: the entry balances using the mathematically correct
+    // amount, not whatever the old rounding artifact happened to be.
+    const { engine } = setup();
+    const taxAmount = percentageOf('67.00', '1.5');
+    expect(taxAmount).toBe('1.01');
+    const lines: JournalLine[] = [
+      { accountId: CASH, debit: taxAmount, credit: '0.00' },
+      { accountId: REVENUE, debit: '0.00', credit: taxAmount },
+    ];
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines,
+      currency: 'USD',
+    });
+    expect(entry.lines[0].debit).toBe('1.01');
+    expect(isBalanced(entry.lines)).toBe(true);
   });
 });
 
@@ -126,7 +201,11 @@ describe('GeneralLedgerEngine — postJournalEntry', () => {
     const { engine } = setup(eventBus);
     let seen: unknown;
     eventBus.subscribe('journal.posted', (payload) => (seen = payload));
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     const posted = await engine.postJournalEntry(ORG, entry.id);
     expect(posted.status).toBe('posted');
     expect(seen).toEqual({ organizationId: ORG, journalEntryId: entry.id });
@@ -134,21 +213,33 @@ describe('GeneralLedgerEngine — postJournalEntry', () => {
 
   it('rejects posting an already-posted entry', async () => {
     const { engine } = setup();
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     await engine.postJournalEntry(ORG, entry.id);
-    await expect(engine.postJournalEntry(ORG, entry.id)).rejects.toBeInstanceOf(InvalidJournalEntryTransitionError);
+    await expect(engine.postJournalEntry(ORG, entry.id)).rejects.toBeInstanceOf(
+      InvalidJournalEntryTransitionError,
+    );
   });
 
   it('throws JournalEntryNotFoundError for an unknown entry', async () => {
     const { engine } = setup();
-    await expect(engine.postJournalEntry(ORG, 'missing')).rejects.toBeInstanceOf(JournalEntryNotFoundError);
+    await expect(engine.postJournalEntry(ORG, 'missing')).rejects.toBeInstanceOf(
+      JournalEntryNotFoundError,
+    );
   });
 });
 
 describe('GeneralLedgerEngine — reverseJournalEntry', () => {
   it('creates a new, posted reversing entry with swapped debit/credit', async () => {
     const { engine } = setup();
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     await engine.postJournalEntry(ORG, entry.id);
     const reversing = await engine.reverseJournalEntry(ORG, entry.id, '2026-01-02');
     expect(reversing.status).toBe('posted');
@@ -161,7 +252,11 @@ describe('GeneralLedgerEngine — reverseJournalEntry', () => {
 
   it('marks the original entry reversed and links reversedByEntryId', async () => {
     const { engine } = setup();
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     await engine.postJournalEntry(ORG, entry.id);
     const reversing = await engine.reverseJournalEntry(ORG, entry.id, '2026-01-02');
     const original = await engine.getJournalEntry(ORG, entry.id);
@@ -171,16 +266,28 @@ describe('GeneralLedgerEngine — reverseJournalEntry', () => {
 
   it('rejects reversing a draft entry', async () => {
     const { engine } = setup();
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
-    await expect(engine.reverseJournalEntry(ORG, entry.id, '2026-01-02')).rejects.toBeInstanceOf(InvalidJournalEntryTransitionError);
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
+    await expect(engine.reverseJournalEntry(ORG, entry.id, '2026-01-02')).rejects.toBeInstanceOf(
+      InvalidJournalEntryTransitionError,
+    );
   });
 
   it('rejects reversing an already-reversed entry', async () => {
     const { engine } = setup();
-    const entry = await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    const entry = await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     await engine.postJournalEntry(ORG, entry.id);
     await engine.reverseJournalEntry(ORG, entry.id, '2026-01-02');
-    await expect(engine.reverseJournalEntry(ORG, entry.id, '2026-01-03')).rejects.toBeInstanceOf(InvalidJournalEntryTransitionError);
+    await expect(engine.reverseJournalEntry(ORG, entry.id, '2026-01-03')).rejects.toBeInstanceOf(
+      InvalidJournalEntryTransitionError,
+    );
   });
 });
 
@@ -258,7 +365,11 @@ describe('GeneralLedgerEngine — get/list/org scoping', () => {
 
   it('listJournalEntries() is organization-scoped', async () => {
     const { engine } = setup();
-    await engine.createJournalEntry(ORG, { entryDate: '2026-01-01', lines: balancedLines(), currency: 'USD' });
+    await engine.createJournalEntry(ORG, {
+      entryDate: '2026-01-01',
+      lines: balancedLines(),
+      currency: 'USD',
+    });
     expect(await engine.listJournalEntries(ORG)).toHaveLength(1);
     expect(await engine.listJournalEntries('org-2')).toHaveLength(0);
   });
@@ -270,7 +381,12 @@ describe('GeneralLedgerEngine — get/list/org scoping', () => {
 
   it('listRecurringTemplates() is organization-scoped', async () => {
     const { engine } = setup();
-    await engine.createRecurringTemplate(ORG, { lines: balancedLines(), currency: 'USD', frequency: 'monthly', startDate: '2026-01-01' });
+    await engine.createRecurringTemplate(ORG, {
+      lines: balancedLines(),
+      currency: 'USD',
+      frequency: 'monthly',
+      startDate: '2026-01-01',
+    });
     expect(await engine.listRecurringTemplates(ORG)).toHaveLength(1);
     expect(await engine.listRecurringTemplates('org-2')).toHaveLength(0);
   });

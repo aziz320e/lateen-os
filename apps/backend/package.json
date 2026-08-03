@@ -8,7 +8,7 @@
   "main": "./dist/main.js",
   "scripts": {
     "build": "prisma generate && tsc",
-    "dev": "tsx watch src/main.ts",
+    "dev": "node scripts/dev.js",
     "start": "node dist/main.js",
     "typecheck": "prisma generate && tsc --noEmit",
     "test": "vitest run",

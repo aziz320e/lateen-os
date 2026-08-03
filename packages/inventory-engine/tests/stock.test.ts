@@ -21,11 +21,23 @@ function setup() {
 
 describe('computeAvailableQuantity (pure)', () => {
   it('subtracts reserved and damaged from on-hand', () => {
-    expect(computeAvailableQuantity({ quantityOnHand: '100.00', reservedQuantity: '20.00', damagedQuantity: '5.00' })).toBe('75.00');
+    expect(
+      computeAvailableQuantity({
+        quantityOnHand: '100.00',
+        reservedQuantity: '20.00',
+        damagedQuantity: '5.00',
+      }),
+    ).toBe('75.00');
   });
 
   it('is the full on-hand quantity when nothing is reserved or damaged', () => {
-    expect(computeAvailableQuantity({ quantityOnHand: '100.00', reservedQuantity: '0.00', damagedQuantity: '0.00' })).toBe('100.00');
+    expect(
+      computeAvailableQuantity({
+        quantityOnHand: '100.00',
+        reservedQuantity: '0.00',
+        damagedQuantity: '0.00',
+      }),
+    ).toBe('100.00');
   });
 });
 
@@ -93,7 +105,11 @@ describe('InventoryStockEngine — getOrCreate', () => {
 describe('InventoryStockEngine — setThresholds', () => {
   it('sets minimum/maximum/reorder point', async () => {
     const { engine } = setup();
-    const level = await engine.setThresholds(ORG, ITEM, WAREHOUSE, { minimumStock: '10.00', maximumStock: '100.00', reorderPoint: '20.00' });
+    const level = await engine.setThresholds(ORG, ITEM, WAREHOUSE, {
+      minimumStock: '10.00',
+      maximumStock: '100.00',
+      reorderPoint: '20.00',
+    });
     expect(level.minimumStock).toBe('10.00');
     expect(level.maximumStock).toBe('100.00');
     expect(level.reorderPoint).toBe('20.00');
@@ -125,12 +141,16 @@ describe('InventoryStockEngine — increaseOnHand/decreaseOnHand', () => {
   it('decreaseOnHand() throws InsufficientStockError when exceeding on-hand quantity', async () => {
     const { engine } = setup();
     await engine.increaseOnHand(ORG, ITEM, WAREHOUSE, '10.00');
-    await expect(engine.decreaseOnHand(ORG, ITEM, WAREHOUSE, '20.00')).rejects.toBeInstanceOf(InsufficientStockError);
+    await expect(engine.decreaseOnHand(ORG, ITEM, WAREHOUSE, '20.00')).rejects.toBeInstanceOf(
+      InsufficientStockError,
+    );
   });
 
   it('decreaseOnHand() throws StockLevelNotFoundError when no level exists yet', async () => {
     const { engine } = setup();
-    await expect(engine.decreaseOnHand(ORG, ITEM, WAREHOUSE, '10.00')).rejects.toBeInstanceOf(StockLevelNotFoundError);
+    await expect(engine.decreaseOnHand(ORG, ITEM, WAREHOUSE, '10.00')).rejects.toBeInstanceOf(
+      StockLevelNotFoundError,
+    );
   });
 });
 
@@ -145,14 +165,18 @@ describe('InventoryStockEngine — increaseReserved/decreaseReserved', () => {
   it('increaseReserved() throws InsufficientStockError when exceeding available quantity', async () => {
     const { engine } = setup();
     await engine.increaseOnHand(ORG, ITEM, WAREHOUSE, '10.00');
-    await expect(engine.increaseReserved(ORG, ITEM, WAREHOUSE, '20.00')).rejects.toBeInstanceOf(InsufficientStockError);
+    await expect(engine.increaseReserved(ORG, ITEM, WAREHOUSE, '20.00')).rejects.toBeInstanceOf(
+      InsufficientStockError,
+    );
   });
 
   it('increaseReserved() accounts for damaged quantity too', async () => {
     const { engine } = setup();
     await engine.increaseOnHand(ORG, ITEM, WAREHOUSE, '10.00');
     await engine.increaseDamaged(ORG, ITEM, WAREHOUSE, '5.00');
-    await expect(engine.increaseReserved(ORG, ITEM, WAREHOUSE, '6.00')).rejects.toBeInstanceOf(InsufficientStockError);
+    await expect(engine.increaseReserved(ORG, ITEM, WAREHOUSE, '6.00')).rejects.toBeInstanceOf(
+      InsufficientStockError,
+    );
   });
 
   it('decreaseReserved() decreases reservedQuantity', async () => {
@@ -292,5 +316,51 @@ describe('InventoryStockEngine — get/list/findByItem/findByWarehouse/org scopi
     const { engine, repository } = setup();
     const level = await engine.increaseOnHand(ORG, ITEM, WAREHOUSE, '10.00');
     expect(await repository.findById('org-2', level.id)).toBeNull();
+  });
+});
+
+describe('InventoryStockEngine — concurrency (concurrency finding regression)', () => {
+  it('decreaseOnHand resists a concurrent lost update: two concurrent 8-unit issues against 10 on hand correctly allow only one', async () => {
+    const { engine } = setup();
+    await engine.increaseOnHand(ORG, ITEM, WAREHOUSE, '10.00');
+
+    // Launched together via Promise.all so both calls' internal
+    // read-check-write sequences genuinely interleave in the event loop
+    // — deterministic (no real timers/I-O anywhere in this engine), not
+    // a flaky timing-based test. Under the prior, unprotected
+    // implementation both reads would observe quantityOnHand=10, both
+    // pass their own "8 > 10? no" check independently, and the second
+    // save would silently discard the first's effect — leaving
+    // quantityOnHand=2 (only one of the two 8-unit issues actually
+    // reflected) despite both callers believing their issue succeeded:
+    // a real 8-unit phantom oversell.
+    const results = await Promise.allSettled([
+      engine.decreaseOnHand(ORG, ITEM, WAREHOUSE, '8.00'),
+      engine.decreaseOnHand(ORG, ITEM, WAREHOUSE, '8.00'),
+    ]);
+
+    const fulfilled = results.filter((r) => r.status === 'fulfilled');
+    const rejected = results.filter((r) => r.status === 'rejected');
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect((rejected[0] as PromiseRejectedResult).reason).toBeInstanceOf(InsufficientStockError);
+
+    const level = await engine.getByItemAndWarehouse(ORG, ITEM, WAREHOUSE);
+    expect(level?.quantityOnHand).toBe('2.00');
+  });
+
+  it('getOrCreate resists a concurrent duplicate-record race for the same (item, warehouse) pair', async () => {
+    const { engine } = setup();
+    // Two concurrent first-touches of a brand-new (item, warehouse) pair.
+    // Under the prior, unprotected implementation, both calls could read
+    // "no existing record" before either had saved, each creating and
+    // saving its own new StockLevel — leaving two divergent records for
+    // what should be one.
+    const [a, b] = await Promise.all([
+      engine.getOrCreate(ORG, ITEM, WAREHOUSE),
+      engine.getOrCreate(ORG, ITEM, WAREHOUSE),
+    ]);
+    expect(a.id).toBe(b.id);
+    expect(await engine.findByItem(ORG, ITEM)).toHaveLength(1);
   });
 });

@@ -48,8 +48,8 @@
 - **`computeInvoiceTotals()`** (pure) — per-line `amount = quantity * unitPrice`, `subtotal = Σamount`, `taxTotal = Σ(amount * taxRatePct / 100)`, `total = subtotal + taxTotal`.
 - **`createInvoice()`** — starts `draft` with `amountPaid: '0.00'`, `balanceDue: total`.
 - **`issueInvoice()`** — `draft` → `issued`, stamping `dueDate = issueDate + customer.paymentTermsDays`. Publishes `invoice.issued`.
-- **`recordPayment()`** — only permitted while `issued`/`partially_paid`. Rejects a payment that would exceed `balanceDue` (`PaymentExceedsBalanceError` — no code path ever produces a negative balance). Moves to `partially_paid` or, once `balanceDue` reaches `0`, `paid` (publishing `invoice.paid`).
-- **Credit notes** — `draft → issued → applied`, with `applied` a dead end (`InvalidCreditNoteTransitionError` otherwise). `applyCreditNoteToInvoice()` reduces the invoice's balance through the exact same guarded path as `recordPayment()`.
+- **`recordPayment()`** — only permitted while `issued`/`partially_paid`. Rejects a payment that would exceed `balanceDue` (`PaymentExceedsBalanceError` — no code path ever produces a negative balance). Moves to `partially_paid` or, once `balanceDue` reaches `0`, `paid` (publishing `invoice.paid`). Serialized per invoice via `createKeyMutex()` so two concurrent payments against the same invoice never race.
+- **Credit notes** — `draft → issued → applied`, with `applied` a dead end (`InvalidCreditNoteTransitionError` otherwise). `applyCreditNoteToInvoice()` reduces the invoice's balance through the exact same guarded path as `recordPayment()`, including the same per-invoice serialization.
 - **`computeAging()`** — buckets every non-cancelled, unpaid invoice's `balanceDue` by days past `dueDate` as of the given date, into `current` / `days_1_30` / `days_31_60` / `days_61_90` / `days_90_plus`, both in aggregate and per customer.
 
 ---
@@ -59,7 +59,7 @@
 `accounts-payable/engine.impl.ts`'s `createAccountsPayableEngine()` mirrors Accounts Receivable's arithmetic and lifecycle shape, applied to the payable side of the ledger (`draft`, `received`, `partially_paid`, `paid`, `cancelled`):
 
 - **`computeBillTotals()`** (pure) — identical shape to `computeInvoiceTotals()`.
-- **`createBill()`** — publishes `bill.created`. **`receiveBill()`** stamps `dueDate` from the vendor's `paymentTermsDays`. **`recordPayment()`** publishes `bill.paid` once fully paid, guarded by the same `PaymentExceedsBalanceError` check as AR.
+- **`createBill()`** — publishes `bill.created`. **`receiveBill()`** stamps `dueDate` from the vendor's `paymentTermsDays`. **`recordPayment()`** publishes `bill.paid` once fully paid, guarded by the same `PaymentExceedsBalanceError` check as AR, and serialized per bill via `createKeyMutex()`.
 - **Vendor credits** — `applyVendorCreditToBill()` mirrors `applyCreditNoteToInvoice()`.
 - **`computeAging()`** — identical bucket boundaries to AR, applied to bills' `dueDate`/`balanceDue`.
 

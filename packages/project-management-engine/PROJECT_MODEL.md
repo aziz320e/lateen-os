@@ -36,7 +36,7 @@
 
 - **`computeTotalAllocation()`** (pure) — sums the allocation percentage of every currently-`active` assignment for an assignee.
 - **`computeRemainingCapacity()` / `isOverAllocated()`** (pure) — fixed comparisons against a configurable capacity ceiling (`DEFAULT_CAPACITY_PERCENTAGE = 100`).
-- **`assign()`** — throws `OverAllocationError` if the projected total allocation would exceed capacity; `updateAllocation()` re-checks capacity against every *other* active assignment for that assignee.
+- **`assign()`** — throws `OverAllocationError` if the projected total allocation would exceed capacity; `updateAllocation()` re-checks capacity against every _other_ active assignment for that assignee. Both are serialized per `assigneeId` via a `KeyMutex` so overlapping allocation checks for the same assignee can't both pass on stale data.
 - **`assigneeId` is an opaque foreign key** — either an HR Engine `EmployeeId` or an AI Workforce worker id, resolved (never redefined) via the Relationship Layer's `getEmployeeContext()` / `getAiWorkforceUtilizationContext()`.
 - **`complete()` / `cancel()`** — free up capacity for future assignments without altering historical records.
 
@@ -71,7 +71,7 @@
 - **`computeRemainingBudget()` / `computeCostVariance()`** (pure) — both `plannedBudget - actualCost`; a negative variance means over budget.
 - **`createBudget()`** — starts at `actualCost: '0.00'`, `status: 'active'`. Publishes `budget.updated` with the computed remaining budget.
 - **`recordCost()`** — accumulates `actualCost`; **`reviseBudget()`** changes `plannedBudget`. Both publish `budget.updated`.
-- **`recordProjectCostEntry()`** (Relationship Layer) — the *only* place this package touches a real General Ledger, composing Finance Engine's own `generalLedger.createJournalEntry()` + `postJournalEntry()` into one balanced, posted entry. This engine module itself never posts anything.
+- **`recordProjectCostEntry()`** (Relationship Layer) — the _only_ place this package touches a real General Ledger, composing Finance Engine's own `generalLedger.createJournalEntry()` + `postJournalEntry()` into one balanced, posted entry. This engine module itself never posts anything.
 
 ---
 
@@ -83,7 +83,7 @@
 - **`createRequirement()`** — starts at `status: 'planned'`, `reservedQuantity: '0.00'`.
 - **`recordReservation()`** — accumulates `reservedQuantity`; automatically transitions to `status: 'reserved'` once the shortage reaches zero.
 - **`listShortages()`** — every requirement for a project with a non-zero computed shortage.
-- **`reserveProjectMaterial()`** (Relationship Layer) — the *only* place this package touches real stock, composing Inventory Engine's own `movements.reserve()`. This engine module itself never mutates a stock level.
+- **`reserveProjectMaterial()`** (Relationship Layer) — the _only_ place this package touches real stock, composing Inventory Engine's own `movements.reserve()`. This engine module itself never mutates a stock level.
 
 ---
 
@@ -116,7 +116,7 @@
 
 - **`getCustomerContext()`** — real CRM Engine `customers.get()`.
 - **`getEmployeeContext()`** — real HR Engine `employees.get()`.
-- **`getAiWorkforceUtilizationContext()`** — real AI Workforce utilization, reached *only* through HR Engine's own already-integrated `relationships.getAiWorkforceUtilizationContext()` — this package has no direct dependency on `@lateen-os/ai-workforce` in production code.
+- **`getAiWorkforceUtilizationContext()`** — real AI Workforce utilization, reached _only_ through HR Engine's own already-integrated `relationships.getAiWorkforceUtilizationContext()` — this package has no direct dependency on `@lateen-os/ai-workforce` in production code.
 - **`recordProjectCostEntry()`** — composes real Finance Engine `generalLedger.createJournalEntry()` + `postJournalEntry()` into one balanced, posted journal entry (debiting the project account, crediting the offset account) — the one, explicit, opt-in place this package touches accounting.
 - **`reserveProjectMaterial()`** — real Inventory Engine `movements.reserve()`.
 - **`raiseProjectApprovalWorkflow()`** — composes real Workflow Engine `defineWorkflow()` + `startWorkflow()`, idempotently caching the workflow definition per `(organizationId, requestType)` so it is defined at most once.

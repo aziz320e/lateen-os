@@ -6,8 +6,16 @@
  *
  * @module accounts-payable/engine.impl
  */
+import { createKeyMutex } from '@lateen-os/shared-kernel/concurrency';
 import { addDaysIso, daysBetweenIso } from '../shared/date.js';
-import { addAmounts, compareAmounts, parseDecimal, subtractAmounts, sumAmounts, toMoney } from '../shared/decimal.js';
+import {
+  addAmounts,
+  compareAmounts,
+  parseDecimal,
+  subtractAmounts,
+  sumAmounts,
+  toMoney,
+} from '../shared/decimal.js';
 import type { FinanceEventBus } from '../events/finance-event-bus.js';
 import {
   BillNotFoundError,
@@ -18,9 +26,20 @@ import {
   VendorNotFoundError,
 } from '../shared/errors.js';
 import { generateId, nowIso } from '../shared/id.js';
-import type { BillId, OrganizationId, SupplierId, VendorCreditId, VendorId } from '../shared/identifiers.js';
+import type {
+  BillId,
+  OrganizationId,
+  SupplierId,
+  VendorCreditId,
+  VendorId,
+} from '../shared/identifiers.js';
 import type { CurrencyCode, ISODate, ISODateTime } from '../shared/primitives.js';
-import type { APPaymentRepository, BillRepository, VendorCreditRepository, VendorRepository } from './repository.js';
+import type {
+  APPaymentRepository,
+  BillRepository,
+  VendorCreditRepository,
+  VendorRepository,
+} from './repository.js';
 import type {
   AgingBucketAmounts,
   AgingReport,
@@ -48,7 +67,9 @@ export function canTransitionBill(from: BillStatus, to: BillStatus): boolean {
   return BILL_TRANSITIONS[from].includes(to);
 }
 
-const VENDOR_CREDIT_TRANSITIONS: Readonly<Record<VendorCreditStatus, readonly VendorCreditStatus[]>> = {
+const VENDOR_CREDIT_TRANSITIONS: Readonly<
+  Record<VendorCreditStatus, readonly VendorCreditStatus[]>
+> = {
   draft: ['issued', 'cancelled'],
   issued: ['applied', 'cancelled'],
   applied: [],
@@ -56,23 +77,39 @@ const VENDOR_CREDIT_TRANSITIONS: Readonly<Record<VendorCreditStatus, readonly Ve
 };
 
 /** Whether a vendor credit may transition from one status to another. */
-export function canTransitionVendorCredit(from: VendorCreditStatus, to: VendorCreditStatus): boolean {
+export function canTransitionVendorCredit(
+  from: VendorCreditStatus,
+  to: VendorCreditStatus,
+): boolean {
   return VENDOR_CREDIT_TRANSITIONS[from].includes(to);
 }
 
 /** Pure: computes each line's amount (`quantity * unitPrice`) and the bill's subtotal/tax/total. */
-export function computeBillTotals(lines: readonly BillLineInput[]): { lines: readonly BillLine[]; totals: BillTotals } {
+export function computeBillTotals(lines: readonly BillLineInput[]): {
+  lines: readonly BillLine[];
+  totals: BillTotals;
+} {
   const computedLines: BillLine[] = lines.map((line) => ({
     ...line,
     amount: toMoney(parseDecimal(line.quantity) * parseDecimal(line.unitPrice)),
   }));
   const subtotal = sumAmounts(computedLines.map((line) => line.amount));
-  const taxTotal = sumAmounts(computedLines.map((line) => toMoney(parseDecimal(line.amount) * (parseDecimal(line.taxRatePct) / 100))));
+  const taxTotal = sumAmounts(
+    computedLines.map((line) =>
+      toMoney(parseDecimal(line.amount) * (parseDecimal(line.taxRatePct) / 100)),
+    ),
+  );
   const total = addAmounts(subtotal, taxTotal);
   return { lines: computedLines, totals: { subtotal, taxTotal, total } };
 }
 
-const EMPTY_BUCKETS: AgingBucketAmounts = { current: '0.00', days_1_30: '0.00', days_31_60: '0.00', days_61_90: '0.00', days_90_plus: '0.00' };
+const EMPTY_BUCKETS: AgingBucketAmounts = {
+  current: '0.00',
+  days_1_30: '0.00',
+  days_31_60: '0.00',
+  days_61_90: '0.00',
+  days_90_plus: '0.00',
+};
 
 /** Pure: which aging bucket a balance falls into, given how many days past due it is. */
 export function agingBucketForDaysOverdue(daysOverdue: number): keyof AgingBucketAmounts {
@@ -118,15 +155,29 @@ export interface AccountsPayableEngine {
 
   createBill(organizationId: OrganizationId, input: CreateBillInput): Promise<Bill>;
   receiveBill(organizationId: OrganizationId, billId: BillId, billDate: ISODate): Promise<Bill>;
-  recordPayment(organizationId: OrganizationId, billId: BillId, input: RecordAPPaymentInput): Promise<APPayment>;
+  recordPayment(
+    organizationId: OrganizationId,
+    billId: BillId,
+    input: RecordAPPaymentInput,
+  ): Promise<APPayment>;
   cancelBill(organizationId: OrganizationId, billId: BillId): Promise<Bill>;
   getBill(organizationId: OrganizationId, billId: BillId): Promise<Bill | null>;
   listBills(organizationId: OrganizationId): Promise<readonly Bill[]>;
   findByVendor(organizationId: OrganizationId, vendorId: VendorId): Promise<readonly Bill[]>;
 
-  createVendorCredit(organizationId: OrganizationId, input: CreateVendorCreditInput): Promise<VendorCredit>;
-  issueVendorCredit(organizationId: OrganizationId, vendorCreditId: VendorCreditId): Promise<VendorCredit>;
-  applyVendorCreditToBill(organizationId: OrganizationId, vendorCreditId: VendorCreditId, billId: BillId): Promise<VendorCredit>;
+  createVendorCredit(
+    organizationId: OrganizationId,
+    input: CreateVendorCreditInput,
+  ): Promise<VendorCredit>;
+  issueVendorCredit(
+    organizationId: OrganizationId,
+    vendorCreditId: VendorCreditId,
+  ): Promise<VendorCredit>;
+  applyVendorCreditToBill(
+    organizationId: OrganizationId,
+    vendorCreditId: VendorCreditId,
+    billId: BillId,
+  ): Promise<VendorCredit>;
 
   /** Outstanding balance across every non-cancelled, unpaid bill for the vendor. */
   getVendorBalance(organizationId: OrganizationId, vendorId: VendorId): Promise<string>;
@@ -143,7 +194,10 @@ export function createAccountsPayableEngine(
   eventBus?: FinanceEventBus,
   now: () => string = nowIso,
 ): AccountsPayableEngine {
-  async function requireVendor(organizationId: OrganizationId, vendorId: VendorId): Promise<Vendor> {
+  async function requireVendor(
+    organizationId: OrganizationId,
+    vendorId: VendorId,
+  ): Promise<Vendor> {
     const vendor = await vendorRepository.findById(organizationId, vendorId);
     if (!vendor) throw new VendorNotFoundError(vendorId);
     return vendor;
@@ -155,23 +209,39 @@ export function createAccountsPayableEngine(
     return bill;
   }
 
-  async function requireVendorCredit(organizationId: OrganizationId, vendorCreditId: VendorCreditId): Promise<VendorCredit> {
+  async function requireVendorCredit(
+    organizationId: OrganizationId,
+    vendorCreditId: VendorCreditId,
+  ): Promise<VendorCredit> {
     const credit = await vendorCreditRepository.findById(organizationId, vendorCreditId);
     if (!credit) throw new VendorCreditNotFoundError(vendorCreditId);
     return credit;
   }
 
-  async function applyToBill(organizationId: OrganizationId, bill: Bill, amount: string): Promise<Bill> {
-    if (compareAmounts(amount, bill.balanceDue) === 1) {
-      throw new PaymentExceedsBalanceError(amount, bill.balanceDue);
-    }
-    const amountPaid = addAmounts(bill.amountPaid, amount);
-    const balanceDue = subtractAmounts(bill.total, amountPaid);
-    const status: BillStatus = compareAmounts(balanceDue, '0') === 0 ? 'paid' : 'partially_paid';
-    const updated: Bill = { ...bill, amountPaid, balanceDue, status, updatedAt: now() };
-    await billRepository.save(updated);
-    if (status === 'paid') eventBus?.publish('bill.paid', { organizationId, billId: bill.id });
-    return updated;
+  // See the identical comment in accounts-receivable/engine.impl.ts's
+  // applyToInvoice: serializes read-compute-write per bill so two
+  // concurrent payments/vendor-credit applications against the same bill
+  // cannot silently lose one's effect on `amountPaid`/`balanceDue`.
+  const billMutex = createKeyMutex();
+
+  async function applyToBill(
+    organizationId: OrganizationId,
+    billId: BillId,
+    amount: string,
+  ): Promise<Bill> {
+    return billMutex.runExclusive(billId, async () => {
+      const bill = await requireBill(organizationId, billId);
+      if (compareAmounts(amount, bill.balanceDue) === 1) {
+        throw new PaymentExceedsBalanceError(amount, bill.balanceDue);
+      }
+      const amountPaid = addAmounts(bill.amountPaid, amount);
+      const balanceDue = subtractAmounts(bill.total, amountPaid);
+      const status: BillStatus = compareAmounts(balanceDue, '0') === 0 ? 'paid' : 'partially_paid';
+      const updated: Bill = { ...bill, amountPaid, balanceDue, status, updatedAt: now() };
+      await billRepository.save(updated);
+      if (status === 'paid') eventBus?.publish('bill.paid', { organizationId, billId: bill.id });
+      return updated;
+    });
   }
 
   return {
@@ -246,7 +316,7 @@ export function createAccountsPayableEngine(
       if (bill.status !== 'received' && bill.status !== 'partially_paid') {
         throw new InvalidBillTransitionError(billId, bill.status, 'partially_paid');
       }
-      await applyToBill(organizationId, bill, input.amount);
+      await applyToBill(organizationId, billId, input.amount);
       const timestamp = now();
       const payment: APPayment = {
         id: generateId('ap-payment'),
@@ -319,8 +389,8 @@ export function createAccountsPayableEngine(
       if (!canTransitionVendorCredit(credit.status, 'applied')) {
         throw new InvalidVendorCreditTransitionError(vendorCreditId, credit.status, 'applied');
       }
-      const bill = await requireBill(organizationId, billId);
-      await applyToBill(organizationId, bill, credit.amount);
+      // Existence is validated by applyToBill itself (inside the lock).
+      await applyToBill(organizationId, billId, credit.amount);
       const updated: VendorCredit = { ...credit, billId, status: 'applied', updatedAt: now() };
       await vendorCreditRepository.save(updated);
       return updated;
@@ -328,7 +398,11 @@ export function createAccountsPayableEngine(
 
     async getVendorBalance(organizationId, vendorId) {
       const bills = await billRepository.findByVendor(organizationId, vendorId);
-      return sumAmounts(bills.filter((bill) => bill.status === 'received' || bill.status === 'partially_paid').map((bill) => bill.balanceDue));
+      return sumAmounts(
+        bills
+          .filter((bill) => bill.status === 'received' || bill.status === 'partially_paid')
+          .map((bill) => bill.balanceDue),
+      );
     },
 
     async computeAging(organizationId, asOf) {

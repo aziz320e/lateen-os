@@ -5,8 +5,16 @@
  *
  * @module accounts-receivable/engine.impl
  */
+import { createKeyMutex } from '@lateen-os/shared-kernel/concurrency';
 import { addDaysIso, daysBetweenIso } from '../shared/date.js';
-import { addAmounts, compareAmounts, parseDecimal, subtractAmounts, sumAmounts, toMoney } from '../shared/decimal.js';
+import {
+  addAmounts,
+  compareAmounts,
+  parseDecimal,
+  subtractAmounts,
+  sumAmounts,
+  toMoney,
+} from '../shared/decimal.js';
 import type { FinanceEventBus } from '../events/finance-event-bus.js';
 import {
   ARCustomerNotFoundError,
@@ -17,9 +25,22 @@ import {
   PaymentExceedsBalanceError,
 } from '../shared/errors.js';
 import { generateId, nowIso } from '../shared/id.js';
-import type { ARCustomerId, ARInvoiceId, ARPaymentId, CreditNoteId, CustomerId, OrganizationId, SalesOpportunityId } from '../shared/identifiers.js';
+import type {
+  ARCustomerId,
+  ARInvoiceId,
+  ARPaymentId,
+  CreditNoteId,
+  CustomerId,
+  OrganizationId,
+  SalesOpportunityId,
+} from '../shared/identifiers.js';
 import type { CurrencyCode, ISODate, ISODateTime } from '../shared/primitives.js';
-import type { ARCustomerRepository, ARInvoiceRepository, ARPaymentRepository, CreditNoteRepository } from './repository.js';
+import type {
+  ARCustomerRepository,
+  ARInvoiceRepository,
+  ARPaymentRepository,
+  CreditNoteRepository,
+} from './repository.js';
 import type {
   AgingBucketAmounts,
   AgingReport,
@@ -60,18 +81,31 @@ export function canTransitionCreditNote(from: CreditNoteStatus, to: CreditNoteSt
 }
 
 /** Pure: computes each line's amount (`quantity * unitPrice`) and the invoice's subtotal/tax/total. */
-export function computeInvoiceTotals(lines: readonly ARInvoiceLineInput[]): { lines: readonly ARInvoiceLine[]; totals: ARInvoiceTotals } {
+export function computeInvoiceTotals(lines: readonly ARInvoiceLineInput[]): {
+  lines: readonly ARInvoiceLine[];
+  totals: ARInvoiceTotals;
+} {
   const computedLines: ARInvoiceLine[] = lines.map((line) => ({
     ...line,
     amount: toMoney(parseDecimal(line.quantity) * parseDecimal(line.unitPrice)),
   }));
   const subtotal = sumAmounts(computedLines.map((line) => line.amount));
-  const taxTotal = sumAmounts(computedLines.map((line) => toMoney(parseDecimal(line.amount) * (parseDecimal(line.taxRatePct) / 100))));
+  const taxTotal = sumAmounts(
+    computedLines.map((line) =>
+      toMoney(parseDecimal(line.amount) * (parseDecimal(line.taxRatePct) / 100)),
+    ),
+  );
   const total = addAmounts(subtotal, taxTotal);
   return { lines: computedLines, totals: { subtotal, taxTotal, total } };
 }
 
-const EMPTY_BUCKETS: AgingBucketAmounts = { current: '0.00', days_1_30: '0.00', days_31_60: '0.00', days_61_90: '0.00', days_90_plus: '0.00' };
+const EMPTY_BUCKETS: AgingBucketAmounts = {
+  current: '0.00',
+  days_1_30: '0.00',
+  days_31_60: '0.00',
+  days_61_90: '0.00',
+  days_90_plus: '0.00',
+};
 
 /** Pure: which aging bucket a balance falls into, given how many days past due it is. */
 export function agingBucketForDaysOverdue(daysOverdue: number): keyof AgingBucketAmounts {
@@ -118,16 +152,34 @@ export interface AccountsReceivableEngine {
   listCustomers(organizationId: OrganizationId): Promise<readonly ARCustomer[]>;
 
   createInvoice(organizationId: OrganizationId, input: CreateARInvoiceInput): Promise<ARInvoice>;
-  issueInvoice(organizationId: OrganizationId, invoiceId: ARInvoiceId, issueDate: ISODate): Promise<ARInvoice>;
-  recordPayment(organizationId: OrganizationId, invoiceId: ARInvoiceId, input: RecordARPaymentInput): Promise<ARPayment>;
+  issueInvoice(
+    organizationId: OrganizationId,
+    invoiceId: ARInvoiceId,
+    issueDate: ISODate,
+  ): Promise<ARInvoice>;
+  recordPayment(
+    organizationId: OrganizationId,
+    invoiceId: ARInvoiceId,
+    input: RecordARPaymentInput,
+  ): Promise<ARPayment>;
   cancelInvoice(organizationId: OrganizationId, invoiceId: ARInvoiceId): Promise<ARInvoice>;
   getInvoice(organizationId: OrganizationId, invoiceId: ARInvoiceId): Promise<ARInvoice | null>;
   listInvoices(organizationId: OrganizationId): Promise<readonly ARInvoice[]>;
-  findByCustomer(organizationId: OrganizationId, customerId: ARCustomerId): Promise<readonly ARInvoice[]>;
+  findByCustomer(
+    organizationId: OrganizationId,
+    customerId: ARCustomerId,
+  ): Promise<readonly ARInvoice[]>;
 
-  createCreditNote(organizationId: OrganizationId, input: CreateCreditNoteInput): Promise<CreditNote>;
+  createCreditNote(
+    organizationId: OrganizationId,
+    input: CreateCreditNoteInput,
+  ): Promise<CreditNote>;
   issueCreditNote(organizationId: OrganizationId, creditNoteId: CreditNoteId): Promise<CreditNote>;
-  applyCreditNoteToInvoice(organizationId: OrganizationId, creditNoteId: CreditNoteId, invoiceId: ARInvoiceId): Promise<CreditNote>;
+  applyCreditNoteToInvoice(
+    organizationId: OrganizationId,
+    creditNoteId: CreditNoteId,
+    invoiceId: ARInvoiceId,
+  ): Promise<CreditNote>;
 
   /** Outstanding balance across every non-cancelled, unpaid invoice for the customer. */
   getCustomerBalance(organizationId: OrganizationId, customerId: ARCustomerId): Promise<string>;
@@ -144,35 +196,64 @@ export function createAccountsReceivableEngine(
   eventBus?: FinanceEventBus,
   now: () => string = nowIso,
 ): AccountsReceivableEngine {
-  async function requireCustomer(organizationId: OrganizationId, customerId: ARCustomerId): Promise<ARCustomer> {
+  async function requireCustomer(
+    organizationId: OrganizationId,
+    customerId: ARCustomerId,
+  ): Promise<ARCustomer> {
     const customer = await customerRepository.findById(organizationId, customerId);
     if (!customer) throw new ARCustomerNotFoundError(customerId);
     return customer;
   }
 
-  async function requireInvoice(organizationId: OrganizationId, invoiceId: ARInvoiceId): Promise<ARInvoice> {
+  async function requireInvoice(
+    organizationId: OrganizationId,
+    invoiceId: ARInvoiceId,
+  ): Promise<ARInvoice> {
     const invoice = await invoiceRepository.findById(organizationId, invoiceId);
     if (!invoice) throw new ARInvoiceNotFoundError(invoiceId);
     return invoice;
   }
 
-  async function requireCreditNote(organizationId: OrganizationId, creditNoteId: CreditNoteId): Promise<CreditNote> {
+  async function requireCreditNote(
+    organizationId: OrganizationId,
+    creditNoteId: CreditNoteId,
+  ): Promise<CreditNote> {
     const note = await creditNoteRepository.findById(organizationId, creditNoteId);
     if (!note) throw new CreditNoteNotFoundError(creditNoteId);
     return note;
   }
 
-  async function applyToInvoice(organizationId: OrganizationId, invoice: ARInvoice, amount: string): Promise<ARInvoice> {
-    if (compareAmounts(amount, invoice.balanceDue) === 1) {
-      throw new PaymentExceedsBalanceError(amount, invoice.balanceDue);
-    }
-    const amountPaid = addAmounts(invoice.amountPaid, amount);
-    const balanceDue = subtractAmounts(invoice.total, amountPaid);
-    const status: ARInvoiceStatus = compareAmounts(balanceDue, '0') === 0 ? 'paid' : 'partially_paid';
-    const updated: ARInvoice = { ...invoice, amountPaid, balanceDue, status, updatedAt: now() };
-    await invoiceRepository.save(updated);
-    if (status === 'paid') eventBus?.publish('invoice.paid', { organizationId, invoiceId: invoice.id });
-    return updated;
+  // Serializes read-compute-write against a single invoice: without this,
+  // two concurrent payments/credit-note applications targeting the same
+  // invoice can both read the same starting `amountPaid`/`balanceDue`,
+  // compute independently, and the second `save()` silently discards the
+  // first's effect (a lost update) even though both individual payment
+  // records are persisted. Keyed by invoice id; unrelated invoices are
+  // never blocked by one another. `applyToInvoice` re-reads the invoice
+  // *inside* the lock rather than accepting an already-fetched one, so
+  // the whole read-compute-write sequence is atomic, not just the write.
+  const invoiceMutex = createKeyMutex();
+
+  async function applyToInvoice(
+    organizationId: OrganizationId,
+    invoiceId: ARInvoiceId,
+    amount: string,
+  ): Promise<ARInvoice> {
+    return invoiceMutex.runExclusive(invoiceId, async () => {
+      const invoice = await requireInvoice(organizationId, invoiceId);
+      if (compareAmounts(amount, invoice.balanceDue) === 1) {
+        throw new PaymentExceedsBalanceError(amount, invoice.balanceDue);
+      }
+      const amountPaid = addAmounts(invoice.amountPaid, amount);
+      const balanceDue = subtractAmounts(invoice.total, amountPaid);
+      const status: ARInvoiceStatus =
+        compareAmounts(balanceDue, '0') === 0 ? 'paid' : 'partially_paid';
+      const updated: ARInvoice = { ...invoice, amountPaid, balanceDue, status, updatedAt: now() };
+      await invoiceRepository.save(updated);
+      if (status === 'paid')
+        eventBus?.publish('invoice.paid', { organizationId, invoiceId: invoice.id });
+      return updated;
+    });
   }
 
   return {
@@ -240,7 +321,11 @@ export function createAccountsReceivableEngine(
         updatedAt: now(),
       };
       await invoiceRepository.save(updated);
-      eventBus?.publish('invoice.issued', { organizationId, invoiceId, customerId: invoice.customerId });
+      eventBus?.publish('invoice.issued', {
+        organizationId,
+        invoiceId,
+        customerId: invoice.customerId,
+      });
       return updated;
     },
 
@@ -249,7 +334,7 @@ export function createAccountsReceivableEngine(
       if (invoice.status !== 'issued' && invoice.status !== 'partially_paid') {
         throw new InvalidARInvoiceTransitionError(invoiceId, invoice.status, 'partially_paid');
       }
-      await applyToInvoice(organizationId, invoice, input.amount);
+      await applyToInvoice(organizationId, invoiceId, input.amount);
       const timestamp = now();
       const payment: ARPayment = {
         id: generateId('ar-payment'),
@@ -322,8 +407,8 @@ export function createAccountsReceivableEngine(
       if (!canTransitionCreditNote(note.status, 'applied')) {
         throw new InvalidCreditNoteTransitionError(creditNoteId, note.status, 'applied');
       }
-      const invoice = await requireInvoice(organizationId, invoiceId);
-      await applyToInvoice(organizationId, invoice, note.amount);
+      // Existence is validated by applyToInvoice itself (inside the lock).
+      await applyToInvoice(organizationId, invoiceId, note.amount);
       const updated: CreditNote = { ...note, invoiceId, status: 'applied', updatedAt: now() };
       await creditNoteRepository.save(updated);
       return updated;
@@ -331,12 +416,17 @@ export function createAccountsReceivableEngine(
 
     async getCustomerBalance(organizationId, customerId) {
       const invoices = await invoiceRepository.findByCustomer(organizationId, customerId);
-      return sumAmounts(invoices.filter((invoice) => invoice.status === 'issued' || invoice.status === 'partially_paid').map((invoice) => invoice.balanceDue));
+      return sumAmounts(
+        invoices
+          .filter((invoice) => invoice.status === 'issued' || invoice.status === 'partially_paid')
+          .map((invoice) => invoice.balanceDue),
+      );
     },
 
     async computeAging(organizationId, asOf) {
       const invoices = (await invoiceRepository.findAll(organizationId)).filter(
-        (invoice) => (invoice.status === 'issued' || invoice.status === 'partially_paid') && invoice.dueDate,
+        (invoice) =>
+          (invoice.status === 'issued' || invoice.status === 'partially_paid') && invoice.dueDate,
       );
 
       const buckets: Record<keyof AgingBucketAmounts, string> = { ...EMPTY_BUCKETS };
@@ -352,11 +442,13 @@ export function createAccountsReceivableEngine(
         byCustomer.set(invoice.customerId, customerBuckets);
       }
 
-      const byCustomerLines = Array.from(byCustomer.entries()).map(([customerId, customerBuckets]) => ({
-        customerId,
-        buckets: customerBuckets,
-        total: sumAmounts(Object.values(customerBuckets)),
-      }));
+      const byCustomerLines = Array.from(byCustomer.entries()).map(
+        ([customerId, customerBuckets]) => ({
+          customerId,
+          buckets: customerBuckets,
+          total: sumAmounts(Object.values(customerBuckets)),
+        }),
+      );
 
       return {
         asOf,

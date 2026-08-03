@@ -16,8 +16,8 @@
 4. **Archive/restore is a deliberate asymmetry** — a `Project`'s `archived` status has no outgoing edges in its ordinary transition table (`PROJECT_TRANSITIONS`); `restore()` is a distinct operation that returns it to the status held immediately before archiving (`statusBeforeArchive`) — the same pattern proven across Finance Engine (Chart of Accounts), HR Engine (Employee/Department), and Inventory Engine (Inventory Catalog).
 5. **Dependencies are guarded against cycles at creation and mutation time** — `wouldCreateCycle()` is checked both when a task is first created with `dependsOnTaskIds` and on every subsequent `addDependency()` call, so the task graph handed to the Scheduling Engine is always a genuine DAG.
 6. **Scheduling composes over the task graph, it never re-implements Task Management** — `computeCriticalPathSchedule()` is a pure function taking caller-supplied `{ taskId, durationDays, dependsOnTaskIds }` tuples; the Scheduling Engine module has no dependency on the Task Management module's repository, keeping the CPM calculation testable in complete isolation from how tasks are stored.
-7. **"Compose, never duplicate" for Resource Planning** — `resource`'s allocation/capacity bookkeeping tracks only this package's own assignment records (`assigneeId` is an opaque foreign key). Real employee identity is resolved, never duplicated, via the Relationship Layer's `getEmployeeContext()`; real AI Workforce utilization is resolved via HR Engine's own already-integrated `relationships.getAiWorkforceUtilizationContext()` — never a direct dependency on `@lateen-os/ai-workforce` in production code.
-8. **Budget Tracking never implements accounting** — `budget` computes and stores its own planned/actual/remaining/variance numbers. The *only* place this package touches a general ledger is `relationship-management`'s `recordProjectCostEntry()`, which calls Finance Engine's own public General Ledger API; no ledger logic is implemented here.
+7. **"Compose, never duplicate" for Resource Planning** — `resource`'s allocation/capacity bookkeeping tracks only this package's own assignment records (`assigneeId` is an opaque foreign key). Real employee identity is resolved, never duplicated, via the Relationship Layer's `getEmployeeContext()`; real AI Workforce utilization is resolved via HR Engine's own already-integrated `relationships.getAiWorkforceUtilizationContext()` — never a direct dependency on `@lateen-os/ai-workforce` in production code. `assign()` and `updateAllocation()` are additionally serialized per `assigneeId` via `createKeyMutex()`, so two concurrent capacity checks for the same assignee can never both pass `computeTotalAllocation()`/`isOverAllocated()` against the same stale total.
+8. **Budget Tracking never implements accounting** — `budget` computes and stores its own planned/actual/remaining/variance numbers. The _only_ place this package touches a general ledger is `relationship-management`'s `recordProjectCostEntry()`, which calls Finance Engine's own public General Ledger API; no ledger logic is implemented here.
 9. **Material Planning never manages inventory** — `material` tracks only required/reserved quantities and shortages as its own bookkeeping. The real stock reservation is `relationship-management`'s `reserveProjectMaterial()`, calling Inventory Engine's own public movement-reservation API.
 10. **Risk scoring is fixed arithmetic** — `computeRiskScore()` is `probability × impact` (each a 1–5 ordinal rating, max score 25); `computeRiskLevel()` is a fixed banding function. **No model-based prediction anywhere.**
 11. **A narrow, purposeful integration surface** — of the 9 required sibling packages, each is wired to exactly one meaningful Relationship Layer capability (see below) — always through the sibling's public runtime API, never a repository, never a modification to that package.
@@ -27,21 +27,21 @@
 
 ## Module map
 
-| Module | Responsibility | Key exports |
-| ------ | -------------- | ------------ |
-| `shared/` | IDs, decimal/date arithmetic, primitives, entity/domain-event/repository bases, `id.ts` helpers | — |
-| `project/` | Project Structure — portfolios, programs, projects, phases, milestones, full project lifecycle | `ProjectStructureEngine`, `ProjectRepository` |
-| `task/` | Task Management — tasks/subtasks, dependencies (cycle-guarded), priorities, labels | `TaskManagementEngine`, `ProjectTaskRepository` |
-| `resource/` | Resource Planning — employee/AI-worker assignment, workload/capacity | `ResourcePlanningEngine`, `ResourceAssignmentRepository` |
-| `scheduling/` | Scheduling Engine — deterministic CPM over the task dependency graph | `SchedulingEngine`, `ScheduleRepository` |
-| `timetracking/` | Time Tracking — immutable work logs, actual-hours aggregation | `TimeTrackingEngine`, `WorkLogRepository` |
-| `budget/` | Budget Tracking — planned/actual/remaining/variance | `BudgetTrackingEngine`, `ProjectBudgetRepository` |
-| `material/` | Material Planning — required/reserved quantities, shortages | `MaterialPlanningEngine`, `MaterialRequirementRepository` |
-| `risk/` | Project Risks — probability × impact scoring, mitigation | `ProjectRiskEngine`, `ProjectRiskRepository` |
-| `deliverable/` | Deliverables — acceptance, approvals, completion | `DeliverableEngine`, `DeliverableRepository` |
-| `relationship-management/` | CRM Engine / HR Engine / Finance Engine / Inventory Engine / Workflow Engine / Communication Hub / Analytics Engine / Business DNA / Institutional Memory integration | `RelationshipManagement` |
-| `queries/` | Read-side query port | `ProjectQueries` |
-| `events/` | Typed event bus | `ProjectEventBus`, `ProjectEventMap` |
+| Module                     | Responsibility                                                                                                                                                        | Key exports                                               |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `shared/`                  | IDs, decimal/date arithmetic, primitives, entity/domain-event/repository bases, `id.ts` helpers                                                                       | —                                                         |
+| `project/`                 | Project Structure — portfolios, programs, projects, phases, milestones, full project lifecycle                                                                        | `ProjectStructureEngine`, `ProjectRepository`             |
+| `task/`                    | Task Management — tasks/subtasks, dependencies (cycle-guarded), priorities, labels                                                                                    | `TaskManagementEngine`, `ProjectTaskRepository`           |
+| `resource/`                | Resource Planning — employee/AI-worker assignment, workload/capacity                                                                                                  | `ResourcePlanningEngine`, `ResourceAssignmentRepository`  |
+| `scheduling/`              | Scheduling Engine — deterministic CPM over the task dependency graph                                                                                                  | `SchedulingEngine`, `ScheduleRepository`                  |
+| `timetracking/`            | Time Tracking — immutable work logs, actual-hours aggregation                                                                                                         | `TimeTrackingEngine`, `WorkLogRepository`                 |
+| `budget/`                  | Budget Tracking — planned/actual/remaining/variance                                                                                                                   | `BudgetTrackingEngine`, `ProjectBudgetRepository`         |
+| `material/`                | Material Planning — required/reserved quantities, shortages                                                                                                           | `MaterialPlanningEngine`, `MaterialRequirementRepository` |
+| `risk/`                    | Project Risks — probability × impact scoring, mitigation                                                                                                              | `ProjectRiskEngine`, `ProjectRiskRepository`              |
+| `deliverable/`             | Deliverables — acceptance, approvals, completion                                                                                                                      | `DeliverableEngine`, `DeliverableRepository`              |
+| `relationship-management/` | CRM Engine / HR Engine / Finance Engine / Inventory Engine / Workflow Engine / Communication Hub / Analytics Engine / Business DNA / Institutional Memory integration | `RelationshipManagement`                                  |
+| `queries/`                 | Read-side query port                                                                                                                                                  | `ProjectQueries`                                          |
+| `events/`                  | Typed event bus                                                                                                                                                       | `ProjectEventBus`, `ProjectEventMap`                      |
 
 Each aggregate module follows: `types.ts`, `repository.ts` (port), `repository.impl.ts` (real in-memory implementation), a `*.impl.ts` service/engine file, and `index.ts`.
 
@@ -278,16 +278,16 @@ Namespace exports for each module; root re-exports for aggregate interfaces, ser
 
 ## Version alignment
 
-| Artifact | Count |
-| -------- | ----- |
-| Lateen OS Architecture | v1.0 Locked |
-| Project lifecycle states | 6 (draft, active, on_hold, completed, cancelled, archived) + restore |
-| Task lifecycle states | 6 (planned, ready, in_progress, blocked, completed, cancelled) |
-| Phase lifecycle states | 3 (planned, active, completed) |
-| Milestone lifecycle states | 3 (pending, reached, missed) |
-| Risk lifecycle states | 5 (identified, mitigating, resolved, accepted, occurred) |
-| Deliverable lifecycle states | 5 (draft, in_review, accepted, rejected, completed) |
-| Material requirement statuses | 4 (planned, reserved, fulfilled, cancelled) |
-| Query methods | 9 (`ProjectQueries`) |
-| Runtime events | 10 (`ProjectEventMap`) |
-| External integrations | 9 (CRM Engine, HR Engine, Finance Engine, Inventory Engine, Workflow Engine, Communication Hub, Analytics Engine, Business DNA, Institutional Memory) — all via public API |
+| Artifact                      | Count                                                                                                                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lateen OS Architecture        | v1.0 Locked                                                                                                                                                                |
+| Project lifecycle states      | 6 (draft, active, on_hold, completed, cancelled, archived) + restore                                                                                                       |
+| Task lifecycle states         | 6 (planned, ready, in_progress, blocked, completed, cancelled)                                                                                                             |
+| Phase lifecycle states        | 3 (planned, active, completed)                                                                                                                                             |
+| Milestone lifecycle states    | 3 (pending, reached, missed)                                                                                                                                               |
+| Risk lifecycle states         | 5 (identified, mitigating, resolved, accepted, occurred)                                                                                                                   |
+| Deliverable lifecycle states  | 5 (draft, in_review, accepted, rejected, completed)                                                                                                                        |
+| Material requirement statuses | 4 (planned, reserved, fulfilled, cancelled)                                                                                                                                |
+| Query methods                 | 9 (`ProjectQueries`)                                                                                                                                                       |
+| Runtime events                | 10 (`ProjectEventMap`)                                                                                                                                                     |
+| External integrations         | 9 (CRM Engine, HR Engine, Finance Engine, Inventory Engine, Workflow Engine, Communication Hub, Analytics Engine, Business DNA, Institutional Memory) — all via public API |

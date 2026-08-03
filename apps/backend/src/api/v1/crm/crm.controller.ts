@@ -18,8 +18,9 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import type { CrmRuntime, queries as crmQueries } from '@lateen-os/crm-engine';
-import { CurrentUser } from '../../../auth/decorators.js';
+import { CurrentUser, RequirePermission } from '../../../auth/decorators.js';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard.js';
+import { PermissionsGuard } from '../../../auth/guards/permissions.guard.js';
 import type { AccessTokenPayload } from '../../../auth/token.service.js';
 import { RuntimeRegistryService } from '../../../runtime-registry/runtime-registry.service.js';
 import { DomainExceptionFilter } from '../common/domain-exception.filter.js';
@@ -57,6 +58,8 @@ export class CrmController {
   // ---- Customers ----
 
   @Get('customers')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listCustomers(@CurrentUser() user: AccessTokenPayload, @Query() query: ListCustomersDto) {
     const result = await this.runtime().queries.findCustomers({
       organizationId: user.organizationId,
@@ -68,16 +71,22 @@ export class CrmController {
   }
 
   @Get('customers/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async getCustomer(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().customers.get(user.organizationId, id);
   }
 
   @Post('customers')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async createCustomer(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateCustomerDto) {
     return this.runtime().customers.create(user.organizationId, body);
   }
 
   @Patch('customers/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async updateCustomer(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -87,11 +96,15 @@ export class CrmController {
   }
 
   @Post('customers/:id/archive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async archiveCustomer(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().customers.archive(user.organizationId, id);
   }
 
   @Post('customers/:id/restore')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async restoreCustomer(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().customers.restore(user.organizationId, id);
   }
@@ -99,6 +112,8 @@ export class CrmController {
   // ---- Leads ----
 
   @Get('leads')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listLeads(@CurrentUser() user: AccessTokenPayload, @Query() query: ListLeadsDto) {
     const result = await this.runtime().queries.findLeads({
       organizationId: user.organizationId,
@@ -110,21 +125,29 @@ export class CrmController {
   }
 
   @Get('leads/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async getLead(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().leads.get(user.organizationId, id);
   }
 
   @Post('leads')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async createLead(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateLeadDto) {
     return this.runtime().leads.create(user.organizationId, body);
   }
 
   @Post('leads/:id/qualify')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async qualifyLead(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().leads.qualify(user.organizationId, id);
   }
 
   @Post('leads/:id/convert')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async convertLead(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -134,6 +157,8 @@ export class CrmController {
   }
 
   @Post('leads/:id/reject')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async rejectLead(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -143,6 +168,8 @@ export class CrmController {
   }
 
   @Post('leads/:id/reopen')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async reopenLead(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().leads.reopen(user.organizationId, id);
   }
@@ -150,6 +177,8 @@ export class CrmController {
   // ---- Contacts ----
 
   @Get('contacts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listContacts(@CurrentUser() user: AccessTokenPayload, @Query() query: ListContactsDto) {
     const result = await this.runtime().queries.findContacts({
       organizationId: user.organizationId,
@@ -163,16 +192,22 @@ export class CrmController {
   }
 
   @Get('contacts/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async getContact(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().contacts.get(user.organizationId, id);
   }
 
   @Post('contacts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async createContact(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateContactDto) {
     return this.runtime().contacts.create(user.organizationId, body);
   }
 
   @Patch('contacts/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async updateContact(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -182,11 +217,15 @@ export class CrmController {
   }
 
   @Post('contacts/:id/archive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async archiveContact(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().contacts.archive(user.organizationId, id);
   }
 
   @Post('contacts/:id/restore')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async restoreContact(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().contacts.restore(user.organizationId, id);
   }
@@ -194,6 +233,8 @@ export class CrmController {
   // ---- Accounts ----
 
   @Get('accounts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listAccounts(@CurrentUser() user: AccessTokenPayload, @Query() query: ListAccountsDto) {
     const result = await this.runtime().queries.findAccounts({
       organizationId: user.organizationId,
@@ -205,16 +246,22 @@ export class CrmController {
   }
 
   @Get('accounts/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async getAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accounts.get(user.organizationId, id);
   }
 
   @Post('accounts')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async createAccount(@CurrentUser() user: AccessTokenPayload, @Body() body: CreateAccountDto) {
     return this.runtime().accounts.create(user.organizationId, body);
   }
 
   @Patch('accounts/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async updateAccount(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -224,11 +271,15 @@ export class CrmController {
   }
 
   @Post('accounts/:id/archive')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async archiveAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accounts.archive(user.organizationId, id);
   }
 
   @Post('accounts/:id/restore')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async restoreAccount(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().accounts.restore(user.organizationId, id);
   }
@@ -236,6 +287,8 @@ export class CrmController {
   // ---- Opportunities ----
 
   @Get('opportunities')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listOpportunities(
     @CurrentUser() user: AccessTokenPayload,
     @Query() query: ListOpportunitiesDto,
@@ -252,17 +305,23 @@ export class CrmController {
   }
 
   @Get('deals')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listDeals(@CurrentUser() user: AccessTokenPayload) {
     const result = await this.runtime().queries.findDeals({ organizationId: user.organizationId });
     return { data: result.groupedByStage, meta: { total: result.total } };
   }
 
   @Get('opportunities/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async getOpportunity(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().opportunities.get(user.organizationId, id);
   }
 
   @Post('opportunities')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async createOpportunity(
     @CurrentUser() user: AccessTokenPayload,
     @Body() body: CreateOpportunityDto,
@@ -271,6 +330,8 @@ export class CrmController {
   }
 
   @Patch('opportunities/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async updateOpportunity(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -280,6 +341,8 @@ export class CrmController {
   }
 
   @Post('opportunities/:id/advance-stage')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async advanceOpportunityStage(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -289,6 +352,8 @@ export class CrmController {
   }
 
   @Post('opportunities/:id/win')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async winOpportunity(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -298,6 +363,8 @@ export class CrmController {
   }
 
   @Post('opportunities/:id/lose')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async loseOpportunity(
     @CurrentUser() user: AccessTokenPayload,
     @Param('id') id: string,
@@ -309,6 +376,8 @@ export class CrmController {
   // ---- Activities ----
 
   @Get('activities')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async listActivities(@CurrentUser() user: AccessTokenPayload, @Query() query: ListActivitiesDto) {
     const result = await this.runtime().queries.findActivities({
       organizationId: user.organizationId,
@@ -323,16 +392,22 @@ export class CrmController {
   }
 
   @Get('activities/:id')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async getActivity(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().activities.get(user.organizationId, id);
   }
 
   @Post('activities')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async logActivity(@CurrentUser() user: AccessTokenPayload, @Body() body: LogActivityDto) {
     return this.runtime().activities.log(user.organizationId, body);
   }
 
   @Post('activities/:id/complete')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:write')
   async completeActivity(@CurrentUser() user: AccessTokenPayload, @Param('id') id: string) {
     return this.runtime().activities.complete(user.organizationId, id);
   }
@@ -340,6 +415,8 @@ export class CrmController {
   // ---- Search ----
 
   @Get('search')
+  @UseGuards(PermissionsGuard)
+  @RequirePermission('crm:read')
   async search(
     @CurrentUser() user: AccessTokenPayload,
     @Query('keyword') keyword: string,

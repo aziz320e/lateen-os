@@ -17,9 +17,9 @@ RUN apk add --no-cache libc6-compat wget \
 WORKDIR /repo
 
 FROM base AS pruner
-ARG APP_PATH
+ARG APP_PACKAGE
 COPY . .
-RUN pnpm dlx turbo prune --docker --filter=./${APP_PATH}
+RUN pnpm dlx turbo prune --docker ${APP_PACKAGE}
 
 FROM base AS deps
 COPY --from=pruner /repo/out/json/ .
@@ -29,11 +29,9 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 ARG APP_PACKAGE
 ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=pruner /repo/out/json/ .
-COPY --from=pruner /repo/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=deps /repo/node_modules ./node_modules
+COPY --from=deps /repo/ .
 COPY --from=pruner /repo/out/full/ .
-RUN pnpm --filter ${APP_PACKAGE} build
+RUN pnpm exec turbo run build --filter=${APP_PACKAGE}
 
 FROM node:${NODE_VERSION} AS runner
 RUN apk add --no-cache libc6-compat wget \

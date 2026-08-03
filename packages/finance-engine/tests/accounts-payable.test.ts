@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { agingBucketForDaysOverdue, canTransitionBill, canTransitionVendorCredit, computeBillTotals, createAccountsPayableEngine } from '../src/accounts-payable/engine.impl.js';
+import {
+  agingBucketForDaysOverdue,
+  canTransitionBill,
+  canTransitionVendorCredit,
+  computeBillTotals,
+  createAccountsPayableEngine,
+} from '../src/accounts-payable/engine.impl.js';
 import {
   createAPPaymentRepository,
   createBillRepository,
@@ -7,7 +13,12 @@ import {
   createVendorRepository,
 } from '../src/accounts-payable/repository.impl.js';
 import { createFinanceEventBus } from '../src/events/index.js';
-import { BillNotFoundError, InvalidBillTransitionError, PaymentExceedsBalanceError, VendorNotFoundError } from '../src/shared/errors.js';
+import {
+  BillNotFoundError,
+  InvalidBillTransitionError,
+  PaymentExceedsBalanceError,
+  VendorNotFoundError,
+} from '../src/shared/errors.js';
 
 const ORG = 'org-1';
 
@@ -16,12 +27,29 @@ function setup(eventBus = createFinanceEventBus()) {
   const billRepository = createBillRepository();
   const vendorCreditRepository = createVendorCreditRepository();
   const paymentRepository = createAPPaymentRepository();
-  const engine = createAccountsPayableEngine(vendorRepository, billRepository, vendorCreditRepository, paymentRepository, eventBus);
-  return { vendorRepository, billRepository, vendorCreditRepository, paymentRepository, engine, eventBus };
+  const engine = createAccountsPayableEngine(
+    vendorRepository,
+    billRepository,
+    vendorCreditRepository,
+    paymentRepository,
+    eventBus,
+  );
+  return {
+    vendorRepository,
+    billRepository,
+    vendorCreditRepository,
+    paymentRepository,
+    engine,
+    eventBus,
+  };
 }
 
 async function seedVendorAndBill(engine: ReturnType<typeof setup>['engine']) {
-  const vendor = await engine.createVendor(ORG, { displayName: 'Supplier Co', currency: 'USD', paymentTermsDays: 20 });
+  const vendor = await engine.createVendor(ORG, {
+    displayName: 'Supplier Co',
+    currency: 'USD',
+    paymentTermsDays: 20,
+  });
   const bill = await engine.createBill(ORG, {
     vendorId: vendor.id,
     currency: 'USD',
@@ -32,7 +60,9 @@ async function seedVendorAndBill(engine: ReturnType<typeof setup>['engine']) {
 
 describe('computeBillTotals (pure)', () => {
   it('computes line amounts, subtotal, tax, and total', () => {
-    const { lines, totals } = computeBillTotals([{ description: 'Materials', quantity: '4', unitPrice: '25.00', taxRatePct: '5' }]);
+    const { lines, totals } = computeBillTotals([
+      { description: 'Materials', quantity: '4', unitPrice: '25.00', taxRatePct: '5' },
+    ]);
     expect(lines[0]?.amount).toBe('100.00');
     expect(totals.subtotal).toBe('100.00');
     expect(totals.taxTotal).toBe('5.00');
@@ -97,7 +127,11 @@ describe('AccountsPayableEngine — bill lifecycle', () => {
   it('createBill() throws for an unknown vendor', async () => {
     const { engine } = setup();
     await expect(
-      engine.createBill(ORG, { vendorId: 'missing', currency: 'USD', lines: [{ description: 'x', quantity: '1', unitPrice: '1.00' }] }),
+      engine.createBill(ORG, {
+        vendorId: 'missing',
+        currency: 'USD',
+        lines: [{ description: 'x', quantity: '1', unitPrice: '1.00' }],
+      }),
     ).rejects.toBeInstanceOf(VendorNotFoundError);
   });
 
@@ -113,7 +147,9 @@ describe('AccountsPayableEngine — bill lifecycle', () => {
     const { engine } = setup();
     const { bill } = await seedVendorAndBill(engine);
     await engine.receiveBill(ORG, bill.id, '2026-01-01');
-    await expect(engine.receiveBill(ORG, bill.id, '2026-01-02')).rejects.toBeInstanceOf(InvalidBillTransitionError);
+    await expect(engine.receiveBill(ORG, bill.id, '2026-01-02')).rejects.toBeInstanceOf(
+      InvalidBillTransitionError,
+    );
   });
 
   it('cancelBill() cancels a draft bill', async () => {
@@ -125,7 +161,9 @@ describe('AccountsPayableEngine — bill lifecycle', () => {
 
   it('throws BillNotFoundError for an unknown bill', async () => {
     const { engine } = setup();
-    await expect(engine.receiveBill(ORG, 'missing', '2026-01-01')).rejects.toBeInstanceOf(BillNotFoundError);
+    await expect(engine.receiveBill(ORG, 'missing', '2026-01-01')).rejects.toBeInstanceOf(
+      BillNotFoundError,
+    );
   });
 });
 
@@ -157,13 +195,17 @@ describe('AccountsPayableEngine — payments', () => {
     const { engine } = setup();
     const { bill } = await seedVendorAndBill(engine);
     await engine.receiveBill(ORG, bill.id, '2026-01-01');
-    await expect(engine.recordPayment(ORG, bill.id, { amount: '9999.00' })).rejects.toBeInstanceOf(PaymentExceedsBalanceError);
+    await expect(engine.recordPayment(ORG, bill.id, { amount: '9999.00' })).rejects.toBeInstanceOf(
+      PaymentExceedsBalanceError,
+    );
   });
 
   it('rejects recording a payment on a draft bill', async () => {
     const { engine } = setup();
     const { bill } = await seedVendorAndBill(engine);
-    await expect(engine.recordPayment(ORG, bill.id, { amount: '10.00' })).rejects.toBeInstanceOf(InvalidBillTransitionError);
+    await expect(engine.recordPayment(ORG, bill.id, { amount: '10.00' })).rejects.toBeInstanceOf(
+      InvalidBillTransitionError,
+    );
   });
 });
 
@@ -171,7 +213,11 @@ describe('AccountsPayableEngine — vendor credits', () => {
   it('createVendorCredit() starts draft', async () => {
     const { engine } = setup();
     const { vendor } = await seedVendorAndBill(engine);
-    const credit = await engine.createVendorCredit(ORG, { vendorId: vendor.id, amount: '15.00', currency: 'USD' });
+    const credit = await engine.createVendorCredit(ORG, {
+      vendorId: vendor.id,
+      amount: '15.00',
+      currency: 'USD',
+    });
     expect(credit.status).toBe('draft');
   });
 
@@ -179,7 +225,11 @@ describe('AccountsPayableEngine — vendor credits', () => {
     const { engine } = setup();
     const { vendor, bill } = await seedVendorAndBill(engine);
     await engine.receiveBill(ORG, bill.id, '2026-01-01');
-    const credit = await engine.createVendorCredit(ORG, { vendorId: vendor.id, amount: '10.00', currency: 'USD' });
+    const credit = await engine.createVendorCredit(ORG, {
+      vendorId: vendor.id,
+      amount: '10.00',
+      currency: 'USD',
+    });
     await engine.issueVendorCredit(ORG, credit.id);
     const applied = await engine.applyVendorCreditToBill(ORG, credit.id, bill.id);
     expect(applied.status).toBe('applied');
@@ -238,5 +288,36 @@ describe('AccountsPayableEngine — balances and aging', () => {
     await engine.recordPayment(ORG, bill.id, { amount: bill.total });
     const aging = await engine.computeAging(ORG, '2026-06-01');
     expect(aging.total).toBe('0.00');
+  });
+});
+
+describe('AccountsPayableEngine — concurrency (concurrency finding regression)', () => {
+  it('recordPayment resists a concurrent lost update: two concurrent $50 payments on a $100 bill correctly leave it fully paid', async () => {
+    // Mirrors accounts-receivable.test.ts's identical regression — same
+    // applyToBill/applyToInvoice pattern, same fix, verified directly
+    // against this package's own engine rather than assumed from AR.
+    const { engine } = setup();
+    const vendor = await engine.createVendor(ORG, {
+      displayName: 'Acme Supplies',
+      currency: 'USD',
+    });
+    const bill = await engine.createBill(ORG, {
+      vendorId: vendor.id,
+      currency: 'USD',
+      lines: [{ description: 'Materials', quantity: '1', unitPrice: '100.00', taxRatePct: '0' }],
+    });
+    await engine.receiveBill(ORG, bill.id, '2026-01-01');
+
+    const [first, second] = await Promise.all([
+      engine.recordPayment(ORG, bill.id, { amount: '50.00' }),
+      engine.recordPayment(ORG, bill.id, { amount: '50.00' }),
+    ]);
+    expect(first.amount).toBe('50.00');
+    expect(second.amount).toBe('50.00');
+
+    const updated = await engine.getBill(ORG, bill.id);
+    expect(updated?.amountPaid).toBe('100.00');
+    expect(updated?.balanceDue).toBe('0.00');
+    expect(updated?.status).toBe('paid');
   });
 });

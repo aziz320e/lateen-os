@@ -12,10 +12,10 @@
 
 1. **DI only, no hidden state** — every `create*` factory takes its dependencies (repositories, event bus, `now()`, and — for `movement`, `counting`, and `procurement` — sibling engines) explicitly. No module-level singletons.
 2. **Repositories stay internal** — `createInventoryRuntime()` constructs every repository and injects it into the relevant service; only services and the query layer are returned.
-3. **Stock arithmetic is owned in exactly one place** — Inventory Movements never mutates a `StockLevel` directly; it always calls the injected `InventoryStockEngine`'s `increaseOnHand()`/`decreaseOnHand()`/`increaseReserved()`/`decreaseReserved()`/`increaseDamaged()`/`decreaseDamaged()`. Inventory Counting's reconciliation, in turn, never mutates stock directly either — it calls Inventory Movements' own `adjust()`, so every stock change in the entire package, regardless of trigger, produces the same kind of immutable `MovementRecord`.
+3. **Stock arithmetic is owned in exactly one place** — Inventory Movements never mutates a `StockLevel` directly; it always calls the injected `InventoryStockEngine`'s `increaseOnHand()`/`decreaseOnHand()`/`increaseReserved()`/`decreaseReserved()`/`increaseDamaged()`/`decreaseDamaged()`. Inventory Counting's reconciliation, in turn, never mutates stock directly either — it calls Inventory Movements' own `adjust()`, so every stock change in the entire package, regardless of trigger, produces the same kind of immutable `MovementRecord`. Every one of these mutators is additionally serialized per `(itemId, warehouseId)` via `shared-kernel`'s `createKeyMutex()`, so two concurrent movements against the same stock level can never both read a stale `quantityOnHand`/`reservedQuantity` and overwrite each other's result.
 4. **Movements are append-only** — there is no update or delete on `InventoryMovementEngine`'s public surface. Every receive/issue/transfer/adjustment/return/reservation/release call creates exactly one new `MovementRecord`.
 5. **Archive/restore is a deliberate asymmetry** — an `InventoryItem`'s `archived` status has no outgoing edges in its ordinary transition table; `restore()` is a distinct operation that returns it to the status held immediately before archiving — the same pattern proven across Finance Engine (Chart of Accounts), HR Engine (Employee/Department), and AI Governance Engine (Governance Policy).
-6. **Valuation prepares figures, it never posts them** — `valuation`'s FIFO/Weighted-Average engine computes and records cost figures only. The *only* place this package touches accounting is `relationship-management`'s `recordInventoryValuationEntry()`, which calls Finance Engine's own public General Ledger API; the Inventory Engine implements no ledger logic of its own.
+6. **Valuation prepares figures, it never posts them** — `valuation`'s FIFO/Weighted-Average engine computes and records cost figures only. The _only_ place this package touches accounting is `relationship-management`'s `recordInventoryValuationEntry()`, which calls Finance Engine's own public General Ledger API; the Inventory Engine implements no ledger logic of its own.
 7. **Procurement recommends, it never approves** — `procurement`'s reorder suggestions, shortage detection, and purchase requests are plain deterministic data. Raising an actual multi-step approval process is the Relationship Layer's job, via Workflow Engine's public API — never implemented inside `procurement` itself.
 8. **A narrow, purposeful integration surface** — of the 7 required sibling packages, each is wired to exactly one meaningful Relationship Layer capability (see below) — always through the sibling's public runtime API, never a repository, never a modification to that package.
 9. **Deterministic everywhere** — guarded lifecycle state machines, fixed decimal-string arithmetic (`shared/decimal.ts`), a fixed FIFO oldest-layer-first consumption rule, a fixed weighted-average blending formula, fixed reorder/shortage threshold comparisons. **No LLM anywhere in this package.**
@@ -24,19 +24,19 @@
 
 ## Module map
 
-| Module | Responsibility | Key exports |
-| ------ | -------------- | ------------ |
-| `shared/` | IDs, decimal/date arithmetic, primitives, entity/domain-event/repository bases, `id.ts` helpers | — |
-| `item/` | Inventory Catalog — items, categories, brands, full lifecycle | `InventoryCatalogEngine`, `InventoryItemRepository` |
-| `warehouse/` | Warehouse Management — warehouses, zones, storage locations, bins | `WarehouseManagementEngine`, `WarehouseRepository` |
-| `stock/` | Inventory Stock — deterministic stock-level arithmetic | `InventoryStockEngine`, `StockLevelRepository` |
-| `movement/` | Inventory Movements — receive/issue/transfer/adjustment/return/reservation/release, composed with Inventory Stock | `InventoryMovementEngine`, `MovementRecordRepository` |
-| `valuation/` | Stock Valuation — FIFO and Weighted Average | `StockValuationEngine`, `CostLayerRepository` |
-| `counting/` | Inventory Counting, composed with Inventory Stock and Inventory Movements | `InventoryCountingEngine`, `InventoryCountRepository` |
-| `procurement/` | Procurement Preparation, composed with Inventory Stock | `ProcurementPreparationEngine`, `PurchaseRequestRepository` |
-| `relationship-management/` | Finance Engine / Sales Engine / Business DNA / Workflow Engine / Communication Hub / Analytics Engine / Institutional Memory integration | `RelationshipManagement` |
-| `queries/` | Read-side query port | `InventoryQueries` |
-| `events/` | Typed event bus | `InventoryEventBus`, `InventoryEventMap` |
+| Module                     | Responsibility                                                                                                                           | Key exports                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `shared/`                  | IDs, decimal/date arithmetic, primitives, entity/domain-event/repository bases, `id.ts` helpers                                          | —                                                           |
+| `item/`                    | Inventory Catalog — items, categories, brands, full lifecycle                                                                            | `InventoryCatalogEngine`, `InventoryItemRepository`         |
+| `warehouse/`               | Warehouse Management — warehouses, zones, storage locations, bins                                                                        | `WarehouseManagementEngine`, `WarehouseRepository`          |
+| `stock/`                   | Inventory Stock — deterministic stock-level arithmetic                                                                                   | `InventoryStockEngine`, `StockLevelRepository`              |
+| `movement/`                | Inventory Movements — receive/issue/transfer/adjustment/return/reservation/release, composed with Inventory Stock                        | `InventoryMovementEngine`, `MovementRecordRepository`       |
+| `valuation/`               | Stock Valuation — FIFO and Weighted Average                                                                                              | `StockValuationEngine`, `CostLayerRepository`               |
+| `counting/`                | Inventory Counting, composed with Inventory Stock and Inventory Movements                                                                | `InventoryCountingEngine`, `InventoryCountRepository`       |
+| `procurement/`             | Procurement Preparation, composed with Inventory Stock                                                                                   | `ProcurementPreparationEngine`, `PurchaseRequestRepository` |
+| `relationship-management/` | Finance Engine / Sales Engine / Business DNA / Workflow Engine / Communication Hub / Analytics Engine / Institutional Memory integration | `RelationshipManagement`                                    |
+| `queries/`                 | Read-side query port                                                                                                                     | `InventoryQueries`                                          |
+| `events/`                  | Typed event bus                                                                                                                          | `InventoryEventBus`, `InventoryEventMap`                    |
 
 Each aggregate module follows: `types.ts`, `repository.ts` (port), `repository.impl.ts` (real in-memory implementation), a `*.impl.ts` service/engine file, and `index.ts`.
 
@@ -241,16 +241,16 @@ Namespace exports for each module; root re-exports for aggregate interfaces, ser
 
 ## Version alignment
 
-| Artifact | Count |
-| -------- | ----- |
-| Lateen OS Architecture | v1.0 Locked |
-| Inventory item lifecycle states | 4 (draft, active, inactive, archived) + restore |
-| Warehouse hierarchy levels | 4 (warehouse, zone, storage location, bin) |
-| Movement types | 7 (receive, issue, transfer, adjustment, return, reservation, release) |
-| Valuation methods | 2 (FIFO, Weighted Average) |
-| Count types | 2 (cycle, full) |
-| Count lifecycle states | 3 (draft, in_progress, completed) |
-| Purchase request statuses | 3 (suggested, acknowledged, dismissed) |
-| Query methods | 8 (`InventoryQueries`) |
-| Runtime events | 10 (`InventoryEventMap`) |
-| External integrations | 7 (Finance Engine, Sales Engine, Business DNA, Workflow Engine, Communication Hub, Analytics Engine, Institutional Memory) — all via public API |
+| Artifact                        | Count                                                                                                                                           |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lateen OS Architecture          | v1.0 Locked                                                                                                                                     |
+| Inventory item lifecycle states | 4 (draft, active, inactive, archived) + restore                                                                                                 |
+| Warehouse hierarchy levels      | 4 (warehouse, zone, storage location, bin)                                                                                                      |
+| Movement types                  | 7 (receive, issue, transfer, adjustment, return, reservation, release)                                                                          |
+| Valuation methods               | 2 (FIFO, Weighted Average)                                                                                                                      |
+| Count types                     | 2 (cycle, full)                                                                                                                                 |
+| Count lifecycle states          | 3 (draft, in_progress, completed)                                                                                                               |
+| Purchase request statuses       | 3 (suggested, acknowledged, dismissed)                                                                                                          |
+| Query methods                   | 8 (`InventoryQueries`)                                                                                                                          |
+| Runtime events                  | 10 (`InventoryEventMap`)                                                                                                                        |
+| External integrations           | 7 (Finance Engine, Sales Engine, Business DNA, Workflow Engine, Communication Hub, Analytics Engine, Institutional Memory) — all via public API |

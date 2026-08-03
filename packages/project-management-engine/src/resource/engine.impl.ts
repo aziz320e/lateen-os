@@ -8,6 +8,7 @@
  *
  * @module resource/engine.impl
  */
+import { createKeyMutex } from '@lateen-os/shared-kernel/concurrency';
 import type { ProjectId } from '../project/types.js';
 import type { ProjectEventBus } from '../events/project-event-bus.js';
 import { OverAllocationError, ResourceAssignmentNotFoundError } from '../shared/errors.js';
@@ -23,16 +24,24 @@ export const DEFAULT_CAPACITY_PERCENTAGE = 100;
 
 /** Sums the allocation percentage of every currently-`active` assignment. */
 export function computeTotalAllocation(assignments: readonly ResourceAssignment[]): number {
-  return assignments.filter((assignment) => assignment.status === 'active').reduce((total, assignment) => total + assignment.allocationPercentage, 0);
+  return assignments
+    .filter((assignment) => assignment.status === 'active')
+    .reduce((total, assignment) => total + assignment.allocationPercentage, 0);
 }
 
 /** Remaining allocatable capacity, floored at `0`. */
-export function computeRemainingCapacity(totalAllocation: number, capacityPercentage: number = DEFAULT_CAPACITY_PERCENTAGE): number {
+export function computeRemainingCapacity(
+  totalAllocation: number,
+  capacityPercentage: number = DEFAULT_CAPACITY_PERCENTAGE,
+): number {
   return Math.max(0, capacityPercentage - totalAllocation);
 }
 
 /** Whether a total allocation exceeds the configured capacity ceiling. */
-export function isOverAllocated(totalAllocation: number, capacityPercentage: number = DEFAULT_CAPACITY_PERCENTAGE): boolean {
+export function isOverAllocated(
+  totalAllocation: number,
+  capacityPercentage: number = DEFAULT_CAPACITY_PERCENTAGE,
+): boolean {
   return totalAllocation > capacityPercentage;
 }
 
@@ -49,18 +58,45 @@ export interface AssignResourceInput {
 
 export interface ResourcePlanningEngine {
   assign(organizationId: OrganizationId, input: AssignResourceInput): Promise<ResourceAssignment>;
-  updateAllocation(organizationId: OrganizationId, assignmentId: ResourceAssignmentId, allocationPercentage: number, capacityPercentage?: number): Promise<ResourceAssignment>;
-  complete(organizationId: OrganizationId, assignmentId: ResourceAssignmentId): Promise<ResourceAssignment>;
-  cancel(organizationId: OrganizationId, assignmentId: ResourceAssignmentId): Promise<ResourceAssignment>;
-  get(organizationId: OrganizationId, assignmentId: ResourceAssignmentId): Promise<ResourceAssignment | null>;
+  updateAllocation(
+    organizationId: OrganizationId,
+    assignmentId: ResourceAssignmentId,
+    allocationPercentage: number,
+    capacityPercentage?: number,
+  ): Promise<ResourceAssignment>;
+  complete(
+    organizationId: OrganizationId,
+    assignmentId: ResourceAssignmentId,
+  ): Promise<ResourceAssignment>;
+  cancel(
+    organizationId: OrganizationId,
+    assignmentId: ResourceAssignmentId,
+  ): Promise<ResourceAssignment>;
+  get(
+    organizationId: OrganizationId,
+    assignmentId: ResourceAssignmentId,
+  ): Promise<ResourceAssignment | null>;
   list(organizationId: OrganizationId): Promise<readonly ResourceAssignment[]>;
-  findByProject(organizationId: OrganizationId, projectId: ProjectId): Promise<readonly ResourceAssignment[]>;
-  findByTask(organizationId: OrganizationId, taskId: ProjectTaskId): Promise<readonly ResourceAssignment[]>;
-  findByAssignee(organizationId: OrganizationId, assigneeId: string): Promise<readonly ResourceAssignment[]>;
+  findByProject(
+    organizationId: OrganizationId,
+    projectId: ProjectId,
+  ): Promise<readonly ResourceAssignment[]>;
+  findByTask(
+    organizationId: OrganizationId,
+    taskId: ProjectTaskId,
+  ): Promise<readonly ResourceAssignment[]>;
+  findByAssignee(
+    organizationId: OrganizationId,
+    assigneeId: string,
+  ): Promise<readonly ResourceAssignment[]>;
   /** Sum of active allocation percentages currently committed by this assignee, across every project. */
   getWorkload(organizationId: OrganizationId, assigneeId: string): Promise<number>;
   /** Remaining allocatable capacity for this assignee, given their current workload. */
-  getRemainingCapacity(organizationId: OrganizationId, assigneeId: string, capacityPercentage?: number): Promise<number>;
+  getRemainingCapacity(
+    organizationId: OrganizationId,
+    assigneeId: string,
+    capacityPercentage?: number,
+  ): Promise<number>;
 }
 
 /** Creates a real {@link ResourcePlanningEngine}. */
@@ -69,59 +105,99 @@ export function createResourcePlanningEngine(
   eventBus?: ProjectEventBus,
   now: () => string = nowIso,
 ): ResourcePlanningEngine {
-  async function requireAssignment(organizationId: OrganizationId, assignmentId: ResourceAssignmentId): Promise<ResourceAssignment> {
+  async function requireAssignment(
+    organizationId: OrganizationId,
+    assignmentId: ResourceAssignmentId,
+  ): Promise<ResourceAssignment> {
     const assignment = await repository.findById(organizationId, assignmentId);
     if (!assignment) throw new ResourceAssignmentNotFoundError(assignmentId);
     return assignment;
   }
 
+  // Serializes the "read every assignment for this assignee, check total
+  // allocation against capacity, write" sequence per assignee. Without
+  // this, two concurrent `assign()`/`updateAllocation()` calls for the
+  // same person can each read the same starting allocation, each
+  // independently pass the capacity check (neither sees the other's
+  // in-flight allocation), and both persist -- over-allocating the
+  // assignee despite the check existing. Keyed by assignee id; different
+  // assignees are never blocked by one another.
+  const assigneeMutex = createKeyMutex();
+
   return {
     async assign(organizationId, input) {
-      const existing = await repository.findByAssignee(organizationId, input.assigneeId);
-      const currentAllocation = computeTotalAllocation(existing);
-      const capacityPercentage = input.capacityPercentage ?? DEFAULT_CAPACITY_PERCENTAGE;
-      const projectedAllocation = currentAllocation + input.allocationPercentage;
-      if (isOverAllocated(projectedAllocation, capacityPercentage)) {
-        throw new OverAllocationError(input.assigneeId, projectedAllocation, computeRemainingCapacity(currentAllocation, capacityPercentage));
-      }
+      return assigneeMutex.runExclusive(input.assigneeId, async () => {
+        const existing = await repository.findByAssignee(organizationId, input.assigneeId);
+        const currentAllocation = computeTotalAllocation(existing);
+        const capacityPercentage = input.capacityPercentage ?? DEFAULT_CAPACITY_PERCENTAGE;
+        const projectedAllocation = currentAllocation + input.allocationPercentage;
+        if (isOverAllocated(projectedAllocation, capacityPercentage)) {
+          throw new OverAllocationError(
+            input.assigneeId,
+            projectedAllocation,
+            computeRemainingCapacity(currentAllocation, capacityPercentage),
+          );
+        }
 
-      const timestamp = now();
-      const assignment: ResourceAssignment = {
-        id: generateId('resource-assignment'),
-        organizationId,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        projectId: input.projectId,
-        taskId: input.taskId,
-        assigneeType: input.assigneeType,
-        assigneeId: input.assigneeId,
-        allocationPercentage: input.allocationPercentage,
-        startDate: input.startDate,
-        endDate: input.endDate,
-        status: 'active',
-      };
-      await repository.save(assignment);
-      eventBus?.publish('resource.assigned', {
-        organizationId,
-        assignmentId: assignment.id,
-        projectId: assignment.projectId,
-        assigneeId: assignment.assigneeId,
-        assigneeType: assignment.assigneeType,
+        const timestamp = now();
+        const assignment: ResourceAssignment = {
+          id: generateId('resource-assignment'),
+          organizationId,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+          projectId: input.projectId,
+          taskId: input.taskId,
+          assigneeType: input.assigneeType,
+          assigneeId: input.assigneeId,
+          allocationPercentage: input.allocationPercentage,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          status: 'active',
+        };
+        await repository.save(assignment);
+        eventBus?.publish('resource.assigned', {
+          organizationId,
+          assignmentId: assignment.id,
+          projectId: assignment.projectId,
+          assigneeId: assignment.assigneeId,
+          assigneeType: assignment.assigneeType,
+        });
+        return assignment;
       });
-      return assignment;
     },
 
-    async updateAllocation(organizationId, assignmentId, allocationPercentage, capacityPercentage = DEFAULT_CAPACITY_PERCENTAGE) {
-      const assignment = await requireAssignment(organizationId, assignmentId);
-      const others = (await repository.findByAssignee(organizationId, assignment.assigneeId)).filter((candidate) => candidate.id !== assignmentId);
-      const otherAllocation = computeTotalAllocation(others);
-      const projectedAllocation = otherAllocation + allocationPercentage;
-      if (isOverAllocated(projectedAllocation, capacityPercentage)) {
-        throw new OverAllocationError(assignment.assigneeId, projectedAllocation, computeRemainingCapacity(otherAllocation, capacityPercentage));
-      }
-      const updated: ResourceAssignment = { ...assignment, allocationPercentage, updatedAt: now() };
-      await repository.save(updated);
-      return updated;
+    async updateAllocation(
+      organizationId,
+      assignmentId,
+      allocationPercentage,
+      capacityPercentage = DEFAULT_CAPACITY_PERCENTAGE,
+    ) {
+      // assigneeId never changes after an assignment is created, so this
+      // lookup is only to route to the right lock -- the actual
+      // read-compute-write happens fresh, inside the lock, below.
+      const { assigneeId } = await requireAssignment(organizationId, assignmentId);
+      return assigneeMutex.runExclusive(assigneeId, async () => {
+        const assignment = await requireAssignment(organizationId, assignmentId);
+        const others = (
+          await repository.findByAssignee(organizationId, assignment.assigneeId)
+        ).filter((candidate) => candidate.id !== assignmentId);
+        const otherAllocation = computeTotalAllocation(others);
+        const projectedAllocation = otherAllocation + allocationPercentage;
+        if (isOverAllocated(projectedAllocation, capacityPercentage)) {
+          throw new OverAllocationError(
+            assignment.assigneeId,
+            projectedAllocation,
+            computeRemainingCapacity(otherAllocation, capacityPercentage),
+          );
+        }
+        const updated: ResourceAssignment = {
+          ...assignment,
+          allocationPercentage,
+          updatedAt: now(),
+        };
+        await repository.save(updated);
+        return updated;
+      });
     },
 
     async complete(organizationId, assignmentId) {
@@ -163,7 +239,11 @@ export function createResourcePlanningEngine(
       return computeTotalAllocation(assignments);
     },
 
-    async getRemainingCapacity(organizationId, assigneeId, capacityPercentage = DEFAULT_CAPACITY_PERCENTAGE) {
+    async getRemainingCapacity(
+      organizationId,
+      assigneeId,
+      capacityPercentage = DEFAULT_CAPACITY_PERCENTAGE,
+    ) {
       const assignments = await repository.findByAssignee(organizationId, assigneeId);
       return computeRemainingCapacity(computeTotalAllocation(assignments), capacityPercentage);
     },

@@ -47,6 +47,10 @@
     "./repository": {
       "types": "./dist/repository/index.d.ts",
       "import": "./dist/repository/index.js"
+    },
+    "./concurrency": {
+      "types": "./dist/concurrency/index.d.ts",
+      "import": "./dist/concurrency/index.js"
     }
   },
   "scripts": {

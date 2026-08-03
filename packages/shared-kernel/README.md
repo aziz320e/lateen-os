@@ -6,29 +6,21 @@ Aligned with **Lateen OS Architecture v1.0 (Locked)**. This package sits below B
 
 ## Scope
 
-| Included | Excluded |
-| -------- | -------- |
-| Entity, AggregateRoot, ValueObject | Business entities |
-| DomainEvent, DomainError, Result | Event bus implementations |
-| Guard, Specification contracts | HTTP / API |
-| UUID, Identifier | Database / ORM |
-| Money, Address, Email, Phone, … | UI |
-| AuditInfo, VersionInfo | Frameworks |
-| TenantId, OrganizationId, BranchId | Business logic |
-| Timestamp, Clock port | Persistence |
+| Included                           | Excluded                  |
+| ---------------------------------- | ------------------------- |
+| Entity, AggregateRoot, ValueObject | Business entities         |
+| DomainEvent, DomainError, Result   | Event bus implementations |
+| Guard, Specification contracts     | HTTP / API                |
+| UUID, Identifier                   | Database / ORM            |
+| Money, Address, Email, Phone, …    | UI                        |
+| AuditInfo, VersionInfo             | Frameworks                |
+| TenantId, OrganizationId, BranchId | Business logic            |
+| Timestamp, Clock port              | Persistence               |
 
 ## Usage
 
 ```typescript
-import {
-  core,
-  common,
-  tenant,
-  type Entity,
-  type Result,
-  ok,
-  err,
-} from '@lateen-os/shared-kernel';
+import { core, common, tenant, type Entity, type Result, ok, err } from '@lateen-os/shared-kernel';
 
 // Namespace access
 const money: common.Money = { amount: '100.00', currency: 'SAR' };
@@ -40,17 +32,18 @@ import type { Specification } from '@lateen-os/shared-kernel/core';
 
 ## Modules
 
-| Module | Purpose |
-| ------ | ------- |
-| `core/` | Entity, AggregateRoot, ValueObject, DomainEvent, DomainError, Result, Guard, Specification |
-| `identity/` | UUID, Identifier |
-| `common/` | Money, Address, Email, Phone, Percentage, TimeRange, GeoLocation |
-| `audit/` | AuditInfo, VersionInfo |
-| `tenant/` | TenantId, OrganizationId, BranchId |
-| `time/` | Timestamp, DateOnly, Clock port |
-| `events/` | `createEventBus<TEventMap>()` — the generic typed event bus every package's own `create<X>EventBus()` is built on |
-| `repository/` | `createInMemoryRepository()` — the generic tenant-scoped in-memory repository every package's `repository.impl.ts` is built on |
-| `observability/` | Logger, retry helper, tracing span primitives |
+| Module           | Purpose                                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `core/`          | Entity, AggregateRoot, ValueObject, DomainEvent, DomainError, Result, Guard, Specification                                     |
+| `identity/`      | UUID, Identifier                                                                                                               |
+| `common/`        | Money, Address, Email, Phone, Percentage, TimeRange, GeoLocation                                                               |
+| `audit/`         | AuditInfo, VersionInfo                                                                                                         |
+| `tenant/`        | TenantId, OrganizationId, BranchId                                                                                             |
+| `time/`          | Timestamp, DateOnly, Clock port                                                                                                |
+| `events/`        | `createEventBus<TEventMap>()` — the generic typed event bus every package's own `create<X>EventBus()` is built on              |
+| `repository/`    | `createInMemoryRepository()` — the generic tenant-scoped in-memory repository every package's `repository.impl.ts` is built on |
+| `observability/` | Logger, retry helper, tracing span primitives                                                                                  |
+| `concurrency/`   | `createKeyMutex()` — per-key async mutex serializing concurrent read-compute-write sequences against the same logical record   |
 
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for dependency rules and integration guidance.
 
