@@ -2,8 +2,7 @@
 
 ## v1.0.0 (GA Target)
 
-- Resolve turbo cyclic dependency (kernel/sdk/extension-system)
-- Resolve turbo cyclic dependency (ai-brain/multi-agent) — found in rc.2, see `release/KNOWN_LIMITATIONS.md`
+- Extend RBAC/permission-decorator enforcement to the 6 `apps/backend` domains that don't yet have it (Sales, HR, Customer Success, Documents, Analytics, Marketplace) and to the rest of the Administration domain beyond Organizations — see `release/CHANGELOG.md`'s `[Unreleased]` section
 - Payment gateway integration (Stripe contract)
 - Real AI Runtime provider implementations
 - OpenSearch marketplace search
