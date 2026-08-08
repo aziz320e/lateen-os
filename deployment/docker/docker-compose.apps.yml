@@ -1,16 +1,20 @@
-# Docker Compose stack for the two applications built in this release —
-# apps/backend (Platform Backend Host / REST API) and apps/erp-web (ERP Web) —
-# plus the Postgres database the backend needs. Reuses the existing
-# parameterized Dockerfile.backend / Dockerfile.frontend (see
-# deployment/docker/images.json for the pattern used by the rest of the
-# platform's services/apps) rather than introducing new Dockerfiles.
+# Docker Compose stack for the two applications built in this release:
+# apps/backend (Platform Backend Host / REST API)
+# apps/erp-web (ERP Web)
+# plus the Postgres database the backend needs.
 #
-# Usage:
+# Local/development usage:
 #   docker compose -f deployment/docker/docker-compose.apps.yml up --build
 #
-# This does not replace infrastructure/docker/docker-compose.yml (the
-# shared platform infra stack: redis, nats, minio, qdrant, observability).
-# For a full local environment, run both stacks together.
+# Production notes:
+# - PostgreSQL is not published to the host.
+# - Backend is bound to localhost only.
+# - ERP Web is bound to localhost only.
+# - External access is provided through Cloudflare Tunnel.
+#
+# This does not replace infrastructure/docker/docker-compose.yml
+# (the shared platform infrastructure stack: redis, nats, minio,
+# qdrant, observability).
 
 services:
   postgres:
@@ -19,8 +23,6 @@ services:
       POSTGRES_USER: lateen
       POSTGRES_PASSWORD: lateen
       POSTGRES_DB: lateen_os_backend
-    ports:
-      - '5432:5432'
     volumes:
       - lateen-backend-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -39,23 +41,23 @@ services:
         SERVICE_PATH: apps/backend
         SERVICE_PORT: '4013'
     ports:
-      - '4013:4013'
+      - '127.0.0.1:4013:4013'
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://lateen:lateen@postgres:5432/lateen_os_backend
-      # Overridden below with real secrets in any non-local deployment — see
-      # apps/backend/.env.example. The backend refuses to start with these
-      # dev-default values when NODE_ENV=production (see
-      # src/config/index.ts's assertProductionSafe), so these placeholders
-      # exist only to document the required shape; export real values via a
-      # `.env` file or your orchestrator's secret store before deploying.
+
+      # Production secrets must be supplied through the environment.
+      # The backend refuses to start with development-default values.
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set a production JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set a production JWT_REFRESH_SECRET}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3013}
+
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://app.lateenos.sa}
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
+
     depends_on:
       postgres:
         condition: service_healthy
+
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:4013/health']
       interval: 30s
@@ -72,13 +74,15 @@ services:
         APP_PATH: apps/erp-web
         APP_PORT: '3013'
     ports:
-      - '3013:3013'
+      - '127.0.0.1:3013:3013'
     environment:
       NODE_ENV: production
       API_BASE_URL: http://backend:4013
+
     depends_on:
       backend:
         condition: service_healthy
+
     healthcheck:
       test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3013/']
       interval: 30s
